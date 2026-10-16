@@ -1,32 +1,84 @@
+"""Analysis pipeline orchestration (Phase 1).
+
+The engine no longer contains business logic: document classification, OCR,
+field extraction, cross-document validation, ownership-chain building and rule
+evaluation are delegated to the swappable engines in ``app.services.registry``
+(fakes today; real OCR/NLP/rules in later phases). This module only:
+
+  * drives the per-document pipeline and persists its output,
+  * records one AnalysisRun per analysis,
+  * converts returned FlagDraft/OwnershipDraft objects into ORM rows linked to
+    that run.
+
+Decision D10: risk flags and ownership records reflect the latest run only
+(previous rows are replaced on re-run), while AnalysisRun rows are retained as
+run history — this keeps the pre-Phase-1 API behaviour identical. Row-level
+history/versioning is a Phase 6 (reviewer workflow) concern.
+"""
+
 import json
-from pathlib import Path
+from datetime import date, datetime, timezone
 
 from sqlalchemy.orm import Session
 
-from app.models import Document, DocumentStatus, Finding, FindingSeverity, OwnershipNode, Property
-from app.services.rule_engine import evaluate_rules
+from app.models import (
+    AnalysisRun,
+    AnalysisRunStatus,
+    Document,
+    DocumentStatus,
+    OwnershipRecord,
+    Property,
+    PropertyStatus,
+    RiskCategory,
+    RiskFlag,
+    Severity,
+)
+from app.services import fakes
+from app.services.registry import (
+    get_cross_validator,
+    get_doc_classifier,
+    get_nlp_extractor,
+    get_ocr_service,
+    get_ownership_builder,
+    get_rule_engine,
+)
+
+#: Identifies the pipeline generation stored on AnalysisRun.engine_version.
+ENGINE_VERSION = "phase-1-fake-v1"
+
+SEVERITY_WEIGHTS = {"low": 1, "medium": 3, "high": 6, "critical": 10}
+
+#: Pre-Phase-1 category strings -> specification vocabulary (Specs p.4 Table 6).
+CATEGORY_ALIASES = {
+    "identifier": "identity",
+    "missing_document": "missing-document",
+    "document_integrity": "document-integrity",
+    "land_use": "land-use",
+}
 
 
 def run_document_pipeline(db: Session, document: Document) -> Document:
-    """Miniature OCR/NLP pipeline — returns mock extracted data for demo."""
+    """Classify + OCR + extract one document via the configured engines."""
     document.status = DocumentStatus.processing
     db.commit()
 
-    mock_data = {
-        "doc_type": _guess_doc_type(document.filename),
-        "owner_name": "Rajesh Patil",
-        "seller_name": "Suresh Deshmukh",
-        "buyer_name": "Rajesh Patil",
-        "survey_number": "124/A",
-        "gat_number": "456",
-        "area_sqft": 1200.0,
-        "registration_date": "2019-03-15",
-        "registration_number": "MH-PUN-2019-12345",
-        "language": "marathi",
-        "confidence": 0.87,
-    }
+    classification = get_doc_classifier().classify(document.filename)
+    ocr_result = get_ocr_service().extract(document.file_path, ["marathi", "eng"])
+    ocr_text = "\n".join(page.text for page in ocr_result.pages)
+    # Field candidates are produced now; persisting them as ExtractedField rows is
+    # Phase 2 work (the current frontend still reads the extracted_data blob).
+    get_nlp_extractor().extract(classification.doc_type, ocr_text)
 
-    document.doc_type = mock_data["doc_type"]
+    mock_data = fakes.mock_extracted_data(
+        classification.doc_type,
+        language=ocr_result.language or fakes.MOCK_LANGUAGE,
+    )
+
+    document.doc_type = classification.doc_type
+    document.doc_type_confidence = classification.confidence
+    document.language = ocr_result.language
+    document.page_count = len(ocr_result.pages)
+    document.ocr_text = ocr_text
     document.extracted_data = json.dumps(mock_data)
     document.status = DocumentStatus.completed
     db.commit()
@@ -35,124 +87,104 @@ def run_document_pipeline(db: Session, document: Document) -> Document:
 
 
 def run_property_analysis(db: Session, property_obj: Property) -> Property:
-    """Cross-document comparison, ownership graph, and rule evaluation."""
+    """Cross-document validation, ownership graph, and rule evaluation."""
     documents = (
         db.query(Document)
         .filter(Document.property_id == property_obj.id, Document.status == DocumentStatus.completed)
         .all()
     )
 
-    db.query(Finding).filter(Finding.property_id == property_obj.id).delete()
-    db.query(OwnershipNode).filter(OwnershipNode.property_id == property_obj.id).delete()
-
-    extracted_values = []
+    extracted: dict[int, dict] = {}
+    extracted_values: list[dict] = []
+    document_meta: dict[int, dict] = {}
     for doc in documents:
+        document_meta[doc.id] = {"filename": doc.filename, "doc_type": doc.doc_type}
         if doc.extracted_data:
-            extracted_values.append(json.loads(doc.extracted_data))
+            payload = json.loads(doc.extracted_data)
+            extracted[doc.id] = payload
+            extracted_values.append(payload)
 
-    findings = _compare_documents(property_obj, extracted_values)
-    for finding in findings:
-        db.add(finding)
+    drafts = get_cross_validator().validate(extracted, document_meta)
+    drafts += get_rule_engine().evaluate(
+        {"state": property_obj.state, "survey_number": property_obj.survey_number},
+        extracted_values,
+    )
+    ownership_drafts = get_ownership_builder().build(document_meta)
 
-    rule_findings = evaluate_rules(property_obj, extracted_values)
-    for finding in rule_findings:
-        db.add(finding)
+    # D10: the latest run owns the rows (AnalysisRun history is retained).
+    db.query(RiskFlag).filter(RiskFlag.property_id == property_obj.id).delete()
+    db.query(OwnershipRecord).filter(OwnershipRecord.property_id == property_obj.id).delete()
 
-    ownership_nodes = _build_ownership_chain(property_obj, documents)
-    for node in ownership_nodes:
-        db.add(node)
+    now = datetime.now(timezone.utc)
+    run = AnalysisRun(
+        property_id=property_obj.id,
+        status=AnalysisRunStatus.completed,
+        engine_version=ENGINE_VERSION,
+        verdict=None,  # Phase 3 computes the verdict
+        started_at=now,
+        finished_at=now,
+    )
+    db.add(run)
+    db.flush()  # assign run.id for the rows below
 
-    severity_weights = {"low": 1, "medium": 3, "high": 6, "critical": 10}
-    all_findings = findings + rule_findings
-    if all_findings:
-        total = sum(severity_weights.get(f.severity.value, 1) for f in all_findings)
+    for draft in drafts:
+        db.add(
+            RiskFlag(
+                property_id=property_obj.id,
+                analysis_run_id=run.id,
+                category=_risk_category(draft.category),
+                title=draft.title,
+                description=draft.description,
+                severity=Severity(draft.severity),
+                confidence=draft.confidence,
+                evidence=draft.evidence,
+                rule_ref=draft.rule_ref,
+                recommended_action=draft.recommended_action,
+            )
+        )
+
+    for draft in ownership_drafts:
+        db.add(
+            OwnershipRecord(
+                property_id=property_obj.id,
+                analysis_run_id=run.id,
+                from_party=draft.from_party,
+                to_party=draft.to_party,
+                transfer_type=draft.transfer_type,
+                transfer_date=_parse_date(draft.transfer_date),
+                document_ref=draft.document_ref,
+                gap_flag=draft.gap_flag,
+                sequence=draft.sequence,
+            )
+        )
+
+    if drafts:
+        total = sum(SEVERITY_WEIGHTS.get(draft.severity, 1) for draft in drafts)
         property_obj.risk_score = min(100.0, total * 5)
     else:
         property_obj.risk_score = 10.0
 
-    property_obj.status = "analyzed"
+    run.risk_score = property_obj.risk_score
+    run.summary = (
+        f"Analysis completed with {len(drafts)} findings and "
+        f"{len(ownership_drafts)} ownership nodes."
+    )
+    property_obj.status = PropertyStatus.analyzed
     db.commit()
     db.refresh(property_obj)
     return property_obj
 
 
-def _guess_doc_type(filename: str) -> str:
-    lower = filename.lower()
-    mapping = {
-        "sale": "sale_deed",
-        "712": "7_12_extract",
-        "7_12": "7_12_extract",
-        "8a": "8a_record",
-        "ferfar": "ferfar",
-        "property": "property_card",
-        "gift": "gift_deed",
-        "mortgage": "mortgage_deed",
-    }
-    for key, value in mapping.items():
-        if key in lower:
-            return value
-    return "sale_deed"
+def _risk_category(value: str) -> RiskCategory:
+    """Map an engine category onto the specification vocabulary (fails loudly)."""
+    return RiskCategory(CATEGORY_ALIASES.get(value, value))
 
 
-def _compare_documents(property_obj: Property, extracted_values: list[dict]) -> list[Finding]:
-    findings: list[Finding] = []
-    if len(extracted_values) < 2:
-        return findings
-
-    survey_numbers = {v.get("survey_number") for v in extracted_values if v.get("survey_number")}
-    if len(survey_numbers) > 1:
-        findings.append(
-            Finding(
-                property_id=property_obj.id,
-                category="identifier",
-                title="Survey number mismatch",
-                description="Extracted survey numbers differ across uploaded documents.",
-                severity=FindingSeverity.high,
-                confidence=0.82,
-                evidence=f"Values found: {', '.join(survey_numbers)}",
-                rule_ref="CONSISTENCY-SURVEY-001",
-            )
-        )
-
-    areas = {v.get("area_sqft") for v in extracted_values if v.get("area_sqft")}
-    if len(areas) > 1:
-        findings.append(
-            Finding(
-                property_id=property_obj.id,
-                category="area",
-                title="Area discrepancy detected",
-                description="Document area values do not match.",
-                severity=FindingSeverity.medium,
-                confidence=0.75,
-                evidence=f"Areas (sqft): {', '.join(str(a) for a in areas)}",
-                rule_ref="CONSISTENCY-AREA-001",
-            )
-        )
-
-    return findings
-
-
-def _build_ownership_chain(property_obj: Property, documents: list[Document]) -> list[OwnershipNode]:
-    nodes = [
-        OwnershipNode(
-            property_id=property_obj.id,
-            person_name="Suresh Deshmukh",
-            transaction_type="sale",
-            transaction_date="2015-06-10",
-            document_ref="Predecessor Sale Deed (not uploaded)",
-            sequence=1,
-        ),
-        OwnershipNode(
-            property_id=property_obj.id,
-            person_name="Rajesh Patil",
-            transaction_type="sale",
-            transaction_date="2019-03-15",
-            document_ref=documents[0].filename if documents else "Sale Deed",
-            sequence=2,
-        ),
-    ]
-
-    if not any("Predecessor" in (n.document_ref or "") for n in nodes):
-        return nodes
-
-    return nodes
+def _parse_date(value: str | None) -> date | None:
+    """Best-effort ISO date parsing; unparseable values stay unset for now."""
+    if not value:
+        return None
+    try:
+        return date.fromisoformat(str(value)[:10])
+    except ValueError:
+        return None
