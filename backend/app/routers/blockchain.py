@@ -1,12 +1,13 @@
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import client_ip, get_current_user
 from app.models import Document, Property, User
 from app.schemas import BlockchainVerifyResult
+from app.services.audit import record
 from app.services.blockchain_service import blockchain_service
 from app.utils.hashing import sha256_file
 
@@ -16,6 +17,7 @@ router = APIRouter(prefix="/blockchain", tags=["blockchain"])
 @router.post("/register/{document_id}", response_model=BlockchainVerifyResult)
 def register_document_hash(
     document_id: int,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -31,6 +33,14 @@ def register_document_hash(
     result = blockchain_service.register_hash(document.id, document.file_hash)
     document.blockchain_tx = result["transaction_id"]
     document.blockchain_verified = True
+    record(
+        db,
+        "blockchain.registered",
+        "document",
+        entity_id=document.id,
+        actor_user_id=current_user.id,
+        ip_address=client_ip(request),
+    )
     db.commit()
 
     return BlockchainVerifyResult(

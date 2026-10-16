@@ -1,20 +1,26 @@
 from io import BytesIO
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import client_ip, get_current_user
 from app.models import Document, Finding, OwnershipNode, Property, User
+from app.services.audit import record
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
 
 @router.get("/{property_id}/pdf")
-def download_report(property_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def download_report(
+    property_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     prop = db.query(Property).filter(Property.id == property_id, Property.owner_id == current_user.id).first()
     if not prop:
         raise HTTPException(status_code=404, detail="Property not found")
@@ -58,6 +64,16 @@ def download_report(property_id: int, db: Session = Depends(get_db), current_use
     line("It does not establish legal title or replace professional advice.")
     pdf.save()
     buffer.seek(0)
+
+    record(
+        db,
+        "report.generated",
+        "property",
+        entity_id=property_id,
+        actor_user_id=current_user.id,
+        ip_address=client_ip(request),
+    )
+    db.commit()
 
     return StreamingResponse(
         buffer,

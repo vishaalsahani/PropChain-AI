@@ -3,15 +3,16 @@ import shutil
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import client_ip, get_current_user
 from app.models import Document, Property, User
 from app.schemas import DocumentOut
 from app.services.analysis_engine import run_document_pipeline
+from app.services.audit import record
 from app.utils.hashing import sha256_file
 
 router = APIRouter(prefix="/documents", tags=["documents"])
@@ -20,6 +21,7 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 @router.post("/upload/{property_id}", response_model=DocumentOut)
 async def upload_document(
     property_id: int,
+    request: Request,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -47,8 +49,18 @@ async def upload_document(
         filename=file.filename or stored_name,
         file_path=str(stored_path),
         file_hash=file_hash,
+        uploaded_by=current_user.id,
     )
     db.add(document)
+    db.flush()  # assigns document.id so the audit row references it in the same commit
+    record(
+        db,
+        "document.uploaded",
+        "document",
+        entity_id=document.id,
+        actor_user_id=current_user.id,
+        ip_address=client_ip(request),
+    )
     db.commit()
     db.refresh(document)
 

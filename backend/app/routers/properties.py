@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import client_ip, get_current_user
 from app.models import Property, User
 from app.schemas import PropertyCreate, PropertyOut
+from app.services.audit import record
 
 router = APIRouter(prefix="/properties", tags=["properties"])
 
@@ -12,11 +13,21 @@ router = APIRouter(prefix="/properties", tags=["properties"])
 @router.post("", response_model=PropertyOut)
 def create_property(
     payload: PropertyCreate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     prop = Property(owner_id=current_user.id, **payload.model_dump())
     db.add(prop)
+    db.flush()  # assigns prop.id so the audit row references it in the same commit
+    record(
+        db,
+        "property.created",
+        "property",
+        entity_id=prop.id,
+        actor_user_id=current_user.id,
+        ip_address=client_ip(request),
+    )
     db.commit()
     db.refresh(prop)
     return prop

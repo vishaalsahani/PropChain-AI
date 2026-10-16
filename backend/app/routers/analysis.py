@@ -1,22 +1,39 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import client_ip, get_current_user
 from app.models import Finding, OwnershipNode, Property, User
 from app.schemas import AnalysisResult, FindingOut, OwnershipNodeOut
 from app.services.analysis_engine import run_property_analysis
+from app.services.audit import record
 
 router = APIRouter(prefix="/analysis", tags=["analysis"])
 
 
 @router.post("/run/{property_id}", response_model=AnalysisResult)
-def run_analysis(property_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def run_analysis(
+    property_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     prop = db.query(Property).filter(Property.id == property_id, Property.owner_id == current_user.id).first()
     if not prop:
         raise HTTPException(status_code=404, detail="Property not found")
 
     prop = run_property_analysis(db, prop)
+    detail = {"risk_score": prop.risk_score} if prop.risk_score is not None else None
+    record(
+        db,
+        "analysis.run_completed",
+        "property",
+        entity_id=property_id,
+        actor_user_id=current_user.id,
+        detail=detail,
+        ip_address=client_ip(request),
+    )
+    db.commit()
     findings = db.query(Finding).filter(Finding.property_id == property_id).all()
     nodes = db.query(OwnershipNode).filter(OwnershipNode.property_id == property_id).order_by(OwnershipNode.sequence).all()
 
