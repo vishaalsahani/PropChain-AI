@@ -2,8 +2,13 @@
 
 Selection reads (optional) settings attributes from ``app.config.settings``
 without requiring them to exist — ``getattr(settings, "ocr_engine", "fake")``.
-Only the "fake" engines exist today, so any other value logs a warning and
-falls back to the fake implementation instead of breaking the app.
+
+Engines are addressed as ``"package.module:ClassName"`` strings and imported on
+first use, so selecting the fake engines never imports the OCR/NLP heavyweights
+(pytesseract, OpenCV) and a machine without Tesseract can still boot. An unknown
+engine *name* logs a warning and falls back to the fake implementation (a typo
+cannot brick the app); a known name whose module fails to import raises at first
+use — loud failure beats silently serving mock data.
 
 Usage:
     from app.services.registry import get_rule_engine
@@ -12,12 +17,12 @@ Usage:
 
 from __future__ import annotations
 
+import importlib
 import logging
 from threading import Lock
 from typing import Any, cast
 
 from app.config import settings
-from app.services import fakes
 from app.services.interfaces import (
     CrossValidator,
     DocClassifier,
@@ -31,14 +36,38 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_ENGINE = "fake"
 
-#: component key -> (settings attribute name, implemented engines by config value)
-_COMPONENTS: dict[str, tuple[str, dict[str, type]]] = {
-    "ocr": ("ocr_engine", {"fake": fakes.FakeOcrService}),
-    "classifier": ("doc_classifier_engine", {"fake": fakes.FakeDocClassifier}),
-    "nlp": ("nlp_extractor_engine", {"fake": fakes.FakeNLPExtractor}),
-    "cross_validator": ("cross_validator_engine", {"fake": fakes.FakeCrossValidator}),
-    "ownership_builder": ("ownership_builder_engine", {"fake": fakes.FakeOwnershipGraphBuilder}),
-    "rule_engine": ("rule_engine", {"fake": fakes.FakeRuleEngine}),
+#: component key -> (settings attribute name, engine name -> "module:Class")
+_COMPONENTS: dict[str, tuple[str, dict[str, str]]] = {
+    "ocr": (
+        "ocr_engine",
+        {
+            "fake": "app.services.fakes:FakeOcrService",
+            "tesseract": "app.services.ocr_tesseract:TesseractOcrService",
+        },
+    ),
+    "classifier": (
+        "doc_classifier_engine",
+        {
+            "fake": "app.services.fakes:FakeDocClassifier",
+            "keyword": "app.services.classifier_keyword:KeywordDocClassifier",
+        },
+    ),
+    "nlp": (
+        "nlp_extractor_engine",
+        {
+            "fake": "app.services.fakes:FakeNLPExtractor",
+            "patterns": "app.services.nlp_patterns:PatternNLPExtractor",
+        },
+    ),
+    "cross_validator": (
+        "cross_validator_engine",
+        {"fake": "app.services.fakes:FakeCrossValidator"},
+    ),
+    "ownership_builder": (
+        "ownership_builder_engine",
+        {"fake": "app.services.fakes:FakeOwnershipGraphBuilder"},
+    ),
+    "rule_engine": ("rule_engine", {"fake": "app.services.fakes:FakeRuleEngine"}),
 }
 
 _CACHE: dict[str, Any] = {}
@@ -54,6 +83,13 @@ def _engine_choice(settings_name: str, default: str = DEFAULT_ENGINE) -> str:
     return choice or default
 
 
+def _resolve_class(dotted: str) -> type:
+    """Import ``"app.services.x:ClassName"`` on demand."""
+    module_name, _, class_name = dotted.partition(":")
+    module = importlib.import_module(module_name)
+    return getattr(module, class_name)
+
+
 def _get_engine(component: str) -> Any:
     cached = _CACHE.get(component)
     if cached is not None:
@@ -66,16 +102,16 @@ def _get_engine(component: str) -> Any:
 
         settings_name, engines = _COMPONENTS[component]
         choice = _engine_choice(settings_name)
-        engine_cls = engines.get(choice)
-        if engine_cls is None:
+        dotted = engines.get(choice)
+        if dotted is None:
             logger.warning(
                 "Engine %r configured via settings.%s is not implemented; using 'fake'",
                 choice,
                 settings_name,
             )
-            engine_cls = engines[DEFAULT_ENGINE]
+            dotted = engines[DEFAULT_ENGINE]
 
-        engine = engine_cls()
+        engine = _resolve_class(dotted)()
         _CACHE[component] = engine
         return engine
 

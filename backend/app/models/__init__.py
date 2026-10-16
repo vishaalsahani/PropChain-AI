@@ -117,6 +117,8 @@ class Document(Base):
     content_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
     doc_type_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
     ocr_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Phase 2: per-page OCR output [{page, text, confidence}] for evidence citation.
+    ocr_pages: Mapped[list | None] = mapped_column(JsonType, nullable=True)
     version: Mapped[int] = mapped_column(Integer, default=1)
     uploaded_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     # Deprecated: kept for the current frontend endpoint until ExtractedField takes over

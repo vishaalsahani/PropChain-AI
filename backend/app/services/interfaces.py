@@ -51,6 +51,7 @@ class FieldCandidate:
     confidence: float | None = None
     page: int | None = None
     snippet: str | None = None
+    normalized_value: str | None = None
 
 
 @dataclass
@@ -107,7 +108,13 @@ class DocClassifier(Protocol):
 
 @runtime_checkable
 class NLPExtractor(Protocol):
-    """Pulls structured fields out of OCR text for a known document type."""
+    """Pulls structured fields out of OCR text for a known document type.
+
+    ``ocr_text`` is page-joined text; pages are separated by a form-feed
+    character (``chr(12)``) so extractors can attribute fields to 1-based page
+    numbers for evidence. Exactly the same convention is used for the value
+    stored on ``Document.ocr_text`` (pages joined by newlines).
+    """
 
     @property
     def engine_version(self) -> str: ...
