@@ -118,3 +118,89 @@ Services:
 ## Disclaimer
 
 This system provides AI-assisted documentary analysis only. It does not establish legal title or replace professional legal advice.
+
+## Setup on a new machine
+
+Target platform: Windows + PowerShell. (The local Python/Node path below is the supported one;
+the `docker-compose.yml` route is **unsupported until Phase 5** — see the Docker note at the end of
+this section.)
+
+### Prerequisites
+
+| Tool | Version | Notes |
+|------|---------|-------|
+| Python | 3.12 (3.13+ untested) | used via the project virtualenv |
+| [uv](https://docs.astral.sh/uv/) | any recent | creates the venv and installs backend deps |
+| Node.js + npm | Node 20+ | Next 16 + React 19, Hardhat |
+
+Optional: [micromamba](https://mamba.readthedocs.io/) for the Tesseract OCR binary (scanned
+documents only).
+
+### 1. Bootstrap (idempotent)
+
+From the repository root:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
+```
+
+`scripts\setup.ps1` checks that `uv`/`node`/`npm` exist, creates `backend\.venv` with
+`uv venv --python 3.12` when it is missing, installs `backend\requirements.txt`, then runs
+`npm ci` in `frontend\` and `contracts\`. It is safe to re-run and never starts a server.
+Skip parts with `-SkipBackend`, `-SkipFrontend` or `-SkipContracts`.
+
+### 2. Environment file
+
+```powershell
+Copy-Item .env.example .env
+```
+
+`.env` lives in the project root and is read by the backend (`pydantic-settings`) and the
+frontend (`NEXT_PUBLIC_API_URL`). At minimum change `SECRET_KEY`; real environment variables
+always win over the `.env` file.
+
+### 3. Tesseract OCR (optional)
+
+Only needed for scanned documents — digital PDFs use their own text layer. The binary is a system
+package, not a pip package:
+
+```powershell
+micromamba create -y -p C:\Users\visha\tools\tessenv -c conda-forge tesseract
+```
+
+Then point `.env` at it (already the default in `.env.example`):
+
+```ini
+TESSERACT_CMD=C:\Users\visha\tools\tessenv\Library\bin\tesseract.exe
+TESSDATA_PREFIX=C:\Users\visha\tools\tessenv\share\tessdata
+```
+
+If Tesseract is missing entirely the app still runs; image-only documents simply are not OCR'd.
+
+### 4. Run the app
+
+```powershell
+# terminal 1 — backend
+cd backend
+.venv\Scripts\python.exe -m uvicorn app.main:app --reload
+
+# terminal 2 — frontend
+cd frontend
+npm run dev
+```
+
+API docs: http://localhost:8000/docs · UI: http://localhost:3000
+
+### 5. Tests
+
+```powershell
+cd backend
+.venv\Scripts\python.exe -m pytest
+```
+
+The suite is self-contained: every test module boots the app against its own temp SQLite database
+(migrated with `alembic upgrade head`) and temp storage directory, and no live server is required.
+
+> **Docker is not supported yet.** `docker-compose.yml` is a Phase 5 deliverable; until then use the
+> local setup above (there is no supported container workflow, and the compose file's images/ports
+> are not maintained).
