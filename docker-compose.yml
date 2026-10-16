@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: propchain
+      POSTGRES_PASSWORD: propchain
+      POSTGRES_DB: propchain
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  ganache:
+    image: trufflesuite/ganache:latest
+    ports:
+      - "8545:8545"
+    command: --host 0.0.0.0 --port 8545 --deterministic
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://propchain:propchain@postgres:5432/propchain
+      SECRET_KEY: dev-secret-change-in-production
+      BLOCKCHAIN_RPC_URL: http://ganache:8545
+      STORAGE_PATH: /app/storage
+    volumes:
+      - ./backend:/app
+      - backend_storage:/app/storage
+    depends_on:
+      - postgres
+      - ganache
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  backend_storage:

@@ -1,0 +1,16 @@
+.env
+.env.local
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+backend/storage/
+backend/propchain.db
+frontend/node_modules/
+frontend/.next/
+contracts/node_modules/
+contracts/artifacts/
+contracts/cache/
+contracts/deployments/
+*.log
+.DS_Store

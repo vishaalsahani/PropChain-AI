@@ -1,0 +1,32 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+sqlalchemy==2.0.35
+python-jose[cryptography]==3.3.0
+bcrypt==4.2.0
+python-multipart==0.0.9
+pydantic-settings==2.5.2
+email-validator==2.2.0
+httpx==0.27.2
+reportlab==4.2.2
+
+# Phase 1 — database migrations
+alembic==1.20.0
+
+# Phase 2 — document intelligence (OCR / extraction / preprocessing)
+# NOTE: pytesseract needs the Tesseract binary (system install, not pip).
+#       Point TESSERACT_CMD at it if it is not on PATH.
+pymupdf==1.28.2
+pytesseract==0.3.13
+langdetect==1.0.9
+rapidfuzz==3.14.6
+opencv-python-headless==5.0.0.93
+scikit-learn==1.9.1
+
+# Phase 5 — blockchain (EVM client)
+web3==8.0.0
+
+# Phase 10 — testing
+pytest==9.1.1
+
+# Optional for Docker/PostgreSQL deployment:
+# psycopg2-binary==2.9.9

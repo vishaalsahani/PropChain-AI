@@ -1,0 +1,18 @@
+{
+  "name": "propchain-contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PropChain-AI Solidity contracts and local EVM toolchain (Hardhat)",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "node": "hardhat node",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "3.1.3",
+    "chai": "4.5.0",
+    "ethers": "6.17.0",
+    "hardhat": "2.29.1"
+  }
+}
