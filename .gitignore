@@ -6,6 +6,7 @@ __pycache__/
 venv/
 backend/storage/
 backend/propchain.db
+backend/fixtures/
 frontend/node_modules/
 frontend/.next/
 contracts/node_modules/
