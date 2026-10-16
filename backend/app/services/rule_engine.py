@@ -1,3 +1,11 @@
+"""DEPRECATED (Phase 1): superseded by the registry-backed engine.
+
+The live path is ``app.services.registry.get_rule_engine()`` (contract in
+``app.services.interfaces``, demo implementation ``FakeRuleEngine`` in
+``app.services.fakes``). This module is no longer imported by the app and is kept
+only as a reference for the pre-Phase-1 behaviour it used to provide.
+"""
+
 from app.models import Finding, FindingSeverity, Property
 
 
