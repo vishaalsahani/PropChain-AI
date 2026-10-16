@@ -4,11 +4,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.database import Base, engine
 from app.routers import analysis, auth, blockchain, documents, properties, reports
 
 Path(settings.storage_path).mkdir(parents=True, exist_ok=True)
-Base.metadata.create_all(bind=engine)
+# Schema is owned by Alembic: run `python -m alembic upgrade head` (no create_all here).
 
 app = FastAPI(title=settings.app_name, version="0.1.0")
 
