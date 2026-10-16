@@ -36,8 +36,12 @@ def health():
         "components": {
             "api": "ready",
             "database": "connected",
-            "ocr_pipeline": "stub",
-            "rule_engine": "stub",
+            # Engine selection is read from backend/.env; report the same names
+            # the pipeline resolves so the running configuration is visible.
+            "ocr_pipeline": settings.ocr_engine,
+            "doc_classifier": settings.doc_classifier_engine,
+            "nlp_extractor": settings.nlp_extractor_engine,
+            "rule_engine": settings.rule_engine,
             "blockchain": "mock" if settings.blockchain_mock_mode else "evm",
         },
     }

@@ -1,11 +1,11 @@
-"""Analysis pipeline orchestration (Phase 1).
+"""Analysis pipeline orchestration (Phase 2).
 
-The engine no longer contains business logic: document classification, OCR,
-field extraction, cross-document validation, ownership-chain building and rule
-evaluation are delegated to the swappable engines in ``app.services.registry``
-(fakes today; real OCR/NLP/rules in later phases). This module only:
+The engine contains no business logic: OCR, classification, field extraction,
+cross-document validation, ownership-chain building and rule evaluation are
+delegated to the swappable engines in ``app.services.registry``. This module:
 
-  * drives the per-document pipeline and persists its output,
+  * drives the per-document pipeline (OCR -> language -> classification ->
+    extraction -> normalization -> persistence) and stores page-level evidence,
   * records one AnalysisRun per analysis,
   * converts returned FlagDraft/OwnershipDraft objects into ORM rows linked to
     that run.
@@ -14,6 +14,10 @@ Decision D10: risk flags and ownership records reflect the latest run only
 (previous rows are replaced on re-run), while AnalysisRun rows are retained as
 run history — this keeps the pre-Phase-1 API behaviour identical. Row-level
 history/versioning is a Phase 6 (reviewer workflow) concern.
+
+Engine selection lives in ``backend/.env`` (see ``app.config``): the fake
+engines keep a fresh machine bootable, the real OCR/NLP engines are opt-in per
+machine and tests pin the fakes.
 """
 
 import json
@@ -26,6 +30,8 @@ from app.models import (
     AnalysisRunStatus,
     Document,
     DocumentStatus,
+    ExtractedField,
+    FieldValueStatus,
     OwnershipRecord,
     Property,
     PropertyStatus,
@@ -33,7 +39,6 @@ from app.models import (
     RiskFlag,
     Severity,
 )
-from app.services import fakes
 from app.services.registry import (
     get_cross_validator,
     get_doc_classifier,
@@ -43,8 +48,9 @@ from app.services.registry import (
     get_rule_engine,
 )
 
-#: Identifies the pipeline generation stored on AnalysisRun.engine_version.
-ENGINE_VERSION = "phase-1-fake-v1"
+#: Pages inside ``ocr_text`` are separated with a form feed (the frozen
+#: convention documented in ``app.services.interfaces``).
+PAGE_SEPARATOR = "\f"
 
 SEVERITY_WEIGHTS = {"low": 1, "medium": 3, "high": 6, "critical": 10}
 
@@ -57,33 +63,120 @@ CATEGORY_ALIASES = {
 }
 
 
+def pipeline_engine_version() -> str:
+    """Run-level engine tag composed from the configured components.
+
+    Truncated to fit ``AnalysisRun.engine_version`` (String(50)); per-field
+    provenance is stored on ``ExtractedField.extractor_version``.
+    """
+    parts = [
+        get_ocr_service().engine_version,
+        get_doc_classifier().engine_version,
+        get_nlp_extractor().engine_version,
+    ]
+    return ("phase-2|" + "|".join(parts))[:50]
+
+
 def run_document_pipeline(db: Session, document: Document) -> Document:
-    """Classify + OCR + extract one document via the configured engines."""
+    """OCR, classify and extract one document (pipeline stages 3-7).
+
+    A processing failure marks the document ``failed`` and re-raises so the
+    caller can surface a clear error; only ``completed`` documents feed the
+    property-level analysis.
+    """
     document.status = DocumentStatus.processing
     db.commit()
 
-    classification = get_doc_classifier().classify(document.filename)
-    ocr_result = get_ocr_service().extract(document.file_path, ["marathi", "eng"])
-    ocr_text = "\n".join(page.text for page in ocr_result.pages)
-    # Field candidates are produced now; persisting them as ExtractedField rows is
-    # Phase 2 work (the current frontend still reads the extracted_data blob).
-    get_nlp_extractor().extract(classification.doc_type, ocr_text)
+    ocr_service = get_ocr_service()
+    classifier = get_doc_classifier()
+    nlp = get_nlp_extractor()
 
-    mock_data = fakes.mock_extracted_data(
-        classification.doc_type,
-        language=ocr_result.language or fakes.MOCK_LANGUAGE,
-    )
+    try:
+        ocr_result = ocr_service.extract(document.file_path, ["marathi", "english"])
+        page_text = PAGE_SEPARATOR.join(page.text for page in ocr_result.pages)
+        classification = classifier.classify(document.filename, page_text)
+        candidates = nlp.extract(classification.doc_type, page_text)
+    except Exception:
+        document.status = DocumentStatus.failed
+        db.commit()
+        raise
 
     document.doc_type = classification.doc_type
     document.doc_type_confidence = classification.confidence
     document.language = ocr_result.language
     document.page_count = len(ocr_result.pages)
-    document.ocr_text = ocr_text
-    document.extracted_data = json.dumps(mock_data)
+    document.ocr_text = "\n".join(page.text for page in ocr_result.pages)
+    document.ocr_pages = [
+        {"page": page.page_number, "text": page.text, "confidence": page.confidence}
+        for page in ocr_result.pages
+    ]
+
+    # Re-run semantics: this document's extracted fields reflect the latest pass.
+    db.query(ExtractedField).filter(ExtractedField.document_id == document.id).delete()
+    for candidate in candidates:
+        db.add(
+            ExtractedField(
+                document_id=document.id,
+                property_id=document.property_id,
+                field_name=candidate.field_name,
+                raw_value=candidate.raw_value,
+                normalized_value=candidate.normalized_value,
+                value_type=candidate.value_type,
+                value_status=FieldValueStatus.present,
+                page=candidate.page,
+                snippet=candidate.snippet,
+                confidence=candidate.confidence,
+                extractor_version=nlp.engine_version,
+            )
+        )
+
+    document.extracted_data = json.dumps(
+        _extracted_blob(classification.doc_type, ocr_result.language, candidates),
+        ensure_ascii=False,
+    )
     document.status = DocumentStatus.completed
     db.commit()
     db.refresh(document)
     return document
+
+
+def _extracted_blob(doc_type: str, language: str | None, candidates: list) -> dict:
+    """Legacy ``extracted_data`` blob rebuilt from real field candidates.
+
+    Top-level keys keep the pre-Phase-1 names working (the frontend and the
+    demo cross-validator read ``survey_number``, ``area_sqft``, ...). Only
+    extracted fields appear — a missing key means "unknown", never an invented
+    value.
+    """
+    data: dict = {"doc_type": doc_type}
+    for candidate in candidates:
+        if candidate.field_name in data:
+            continue  # first candidate wins; extraction order is deterministic
+        value = _blob_value(candidate)
+        if value is not None:
+            data[candidate.field_name] = value
+
+    confidences = [c.confidence for c in candidates if c.confidence is not None]
+    data["language"] = language
+    data["confidence"] = round(sum(confidences) / len(confidences), 4) if confidences else 0.0
+    return data
+
+
+def _blob_value(candidate) -> object | None:
+    """Canonical value for the blob: normalized when available, else raw."""
+    value = (
+        candidate.normalized_value
+        if candidate.normalized_value is not None
+        else candidate.raw_value
+    )
+    if value is None:
+        return None
+    if candidate.value_type == "number":
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return value
+    return value
 
 
 def run_property_analysis(db: Session, property_obj: Property) -> Property:
@@ -119,7 +212,7 @@ def run_property_analysis(db: Session, property_obj: Property) -> Property:
     run = AnalysisRun(
         property_id=property_obj.id,
         status=AnalysisRunStatus.completed,
-        engine_version=ENGINE_VERSION,
+        engine_version=pipeline_engine_version(),
         verdict=None,  # Phase 3 computes the verdict
         started_at=now,
         finished_at=now,

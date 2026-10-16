@@ -5,10 +5,9 @@ Bootstrap order matters and mirrors a real deployment:
 1. allocate a temp directory for the test module;
 2. point the app at it with environment variables *before anything imports app*
    (``DATABASE_URL``, ``STORAGE_PATH``, ``BLOCKCHAIN_MOCK_MODE``, ``SECRET_KEY``);
-3. run ``alembic upgrade head`` programmatically against that same temp DB;
-4. only then import ``app.main`` — it calls ``Base.metadata.create_all`` at
-   import time, so migrations must create the schema first (``create_all`` is a
-   check-first no-op for tables alembic already created).
+3. run ``alembic upgrade head`` programmatically against that same temp DB
+   (the schema is owned by Alembic since Phase 1 — no ``create_all``);
+4. only then import ``app.main``.
 
 Each test module that requests the fixtures gets its own temp DB and storage
 directory, so modules can not leak state into each other.
@@ -44,6 +43,16 @@ def app_env(tmp_path_factory):
     os.environ["STORAGE_PATH"] = storage_path.as_posix()
     os.environ["BLOCKCHAIN_MOCK_MODE"] = "true"
     os.environ["SECRET_KEY"] = TEST_SECRET_KEY
+
+    # Engine selection: API tests exercise plumbing, not AI — pin the fakes so a
+    # developer's backend/.env (real Tesseract/pattern engines) cannot change
+    # test behaviour. Real-engine tests configure their engines directly.
+    os.environ["OCR_ENGINE"] = "fake"
+    os.environ["DOC_CLASSIFIER_ENGINE"] = "fake"
+    os.environ["NLP_EXTRACTOR_ENGINE"] = "fake"
+    os.environ["CROSS_VALIDATOR_ENGINE"] = "fake"
+    os.environ["OWNERSHIP_BUILDER_ENGINE"] = "fake"
+    os.environ["RULE_ENGINE"] = "fake"
 
     # 2. schema via migrations, before app.main gets imported (it would otherwise
     #    create tables itself with create_all and hide migration breakage).
