@@ -20,9 +20,9 @@ PropChain/
 | Auth (JWT) | Working | Register, login, protected routes |
 | Property Management | Working | Create/list/view properties |
 | Document Upload | Working | PDF/JPG/PNG upload + SHA-256 hash |
-| OCR/NLP Pipeline | Stub | Mock entity extraction for demo |
-| Analysis Engine | Stub | Cross-doc compare + ownership chain |
-| Rule Engine | Stub | Maharashtra demo rules |
+| OCR/NLP Pipeline | Working | Real engines (Phase 2): Tesseract OCR + PDF text layer, keyword doc classifier (15 types, EN/MR), pattern-based field extraction |
+| Analysis Engine | Partial | Consistency checks run on extracted values; the ownership-chain builder is still the Phase-1 demo chain (real builder: Phase 3) |
+| Rule Engine | Stub | Maharashtra demo rules (DB-backed rule packs: Phase 4) |
 | Blockchain Module | Stub/Mock | Hash register + verify (mock mode default) |
 | Report Generator | Working | PDF due-diligence report download |
 | Frontend Dashboard | Working | Full UI for all flows |
@@ -60,6 +60,48 @@ Copy `.env.example` to `.env` in project root and adjust if needed.
 
 Optional system tool: **Tesseract OCR** — required for scanned-document OCR (digital PDFs use
 their text layer). If the binary is not on `PATH`, point `TESSERACT_CMD` at it in `.env`.
+
+### Engine selection (Phase 2)
+
+Document intelligence sits behind frozen interfaces (`backend/app/services/interfaces.py`) and is
+selected per machine in `backend/.env` (read when the server runs from `backend/`):
+
+| Setting | Values | Code default | Effect |
+|---|---|---|---|
+| `OCR_ENGINE` | `fake`, `tesseract` | `fake` | Tesseract OCR for scans; digital PDFs use their embedded text layer |
+| `DOC_CLASSIFIER_ENGINE` | `fake`, `keyword` | `fake` | Keyword/label fingerprinting → one of the 15 doc types |
+| `NLP_EXTRACTOR_ENGINE` | `fake`, `patterns` | `fake` | Label/regex pattern pack, EN + Marathi (Devanagari numerals, `MH-XXX-YYYY-NNNNN`, survey/Gat/CTS, area units → sqft, consideration) |
+
+`CROSS_VALIDATOR_ENGINE`, `OWNERSHIP_BUILDER_ENGINE` and `RULE_ENGINE` still select the Phase-1
+fakes — Phase 3/4 replace them. The active selection is visible in `GET /health`.
+
+The default is `fake` so a fresh checkout boots without Tesseract/OpenCV; set the three values to
+`tesseract` / `keyword` / `patterns` for real extraction. An unknown engine name logs a warning and
+falls back to fake; a known name whose module cannot be imported raises at first use (loud failure,
+never a silent mock).
+
+### Labelled fixtures + AC-2 accuracy harness
+
+`backend/scripts/make_fixtures.py` deterministically generates an 18-document English/Marathi corpus
+(digital PDFs with a text layer plus scanned PDF/JPEG/PNG variants with rotation, noise and JPEG
+artifacts) across 6 document types, with ground-truth JSON and a `_manifest.json`:
+
+```powershell
+cd backend
+.venv\Scripts\python.exe scripts\make_fixtures.py --verify    # writes %TEMP%\propchain_fixtures
+.venv\Scripts\python.exe scripts\accuracy_report.py           # score the real engines from .env
+.venv\Scripts\python.exe scripts\accuracy_report.py --fake    # smoke-run the harness itself
+```
+
+The harness drives the real pipeline (OCR → classify → extract) and scores it against the ground
+truth, writing `backend/artifacts/phase2_accuracy.md` (+ `.json`). Measured on this machine
+(Tesseract 5.5.3 + `keyword-v1` + `patterns-v1`, 2026-10-17): **classification 18/18 · AC-2 core
+fields (owner / survey / area / date) 54/54 · all scored fields 136/136**, for English and Marathi,
+digital and scanned.
+
+> Honesty note: the fixture wording and the pattern pack were co-designed (see the `make_fixtures.py`
+> docstring), so this measures the end-to-end pipeline, not generalisation to unseen wording. The
+> independent acceptance dataset is Phase 10 work.
 
 ### 4. Contracts (optional local EVM)
 
@@ -157,7 +199,9 @@ Copy-Item .env.example .env
 
 `.env` lives in the project root and is read by the backend (`pydantic-settings`) and the
 frontend (`NEXT_PUBLIC_API_URL`). At minimum change `SECRET_KEY`; real environment variables
-always win over the `.env` file.
+always win over the `.env` file. (`.env` is resolved relative to the working directory, so a
+backend shell started in `backend\` reads `backend\.env` — that is where the Phase-2 engine
+selection below is kept on the demo machine. Both locations are gitignored.)
 
 ### 3. Tesseract OCR (optional)
 
@@ -196,10 +240,14 @@ API docs: http://localhost:8000/docs · UI: http://localhost:3000
 ```powershell
 cd backend
 .venv\Scripts\python.exe -m pytest
+.venv\Scripts\python.exe -m pytest tests\test_ocr_engine.py -v      # OCR engine (needs Tesseract)
 ```
 
 The suite is self-contained: every test module boots the app against its own temp SQLite database
 (migrated with `alembic upgrade head`) and temp storage directory, and no live server is required.
+It pins the fake engines via environment variables, so the real engines never run inside `pytest`;
+the real pipeline is measured by `scripts/accuracy_report.py` (see *Engine selection* above).
+Current status: **142 tests, 0 failures** (Phase 2). Contract tests: `npm run test` in `contracts\`.
 
 > **Docker is not supported yet.** `docker-compose.yml` is a Phase 5 deliverable; until then use the
 > local setup above (there is no supported container workflow, and the compose file's images/ports
