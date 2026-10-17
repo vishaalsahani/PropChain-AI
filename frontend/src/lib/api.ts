@@ -58,6 +58,7 @@ export const api = {
   runAnalysis: (propertyId: number) => request<AnalysisResult>(`/analysis/run/${propertyId}`, { method: "POST" }),
   getFindings: (propertyId: number) => request<Finding[]>(`/analysis/${propertyId}/findings`),
   getOwnership: (propertyId: number) => request<OwnershipNode[]>(`/analysis/${propertyId}/ownership`),
+  getVerdict: (propertyId: number) => request<VerdictOut>(`/analysis/${propertyId}/verdict`),
   registerBlockchain: (documentId: number) =>
     request<BlockchainResult>(`/blockchain/register/${documentId}`, { method: "POST" }),
   verifyBlockchain: (documentId: number) =>
@@ -116,6 +117,24 @@ export type OwnershipNode = {
   transaction_date: string;
   document_ref: string | null;
   sequence: number;
+  from_party?: string | null;
+  gap_flag?: boolean;
+};
+
+export type VerdictReasons = {
+  verdict?: string;
+  reasons?: string[];
+  not_checked?: string[];
+};
+
+export type VerdictOut = {
+  property_id: number;
+  analysis_run_id: number | null;
+  verdict: "verified" | "needs_review" | "flagged" | null;
+  reasons: string[];
+  not_checked: string[];
+  risk_score: number | null;
+  engine_version: string | null;
 };
 
 export type AnalysisResult = {
@@ -124,6 +143,8 @@ export type AnalysisResult = {
   ownership_chain: OwnershipNode[];
   risk_score: number;
   summary: string;
+  verdict: string | null;
+  verdict_reasons: VerdictReasons | null;
 };
 
 export type BlockchainResult = {

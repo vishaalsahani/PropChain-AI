@@ -6,7 +6,8 @@ import DocumentUploader, { DocumentList } from "@/components/DocumentUploader";
 import FindingsList from "@/components/FindingsList";
 import OwnershipTimeline from "@/components/OwnershipTimeline";
 import RiskIndicator from "@/components/RiskIndicator";
-import { api, DocumentItem, Finding, OwnershipNode, Property, getToken } from "@/lib/api";
+import VerdictBadge from "@/components/VerdictBadge";
+import { api, DocumentItem, Finding, OwnershipNode, Property, VerdictOut, getToken } from "@/lib/api";
 
 export default function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -15,6 +16,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [findings, setFindings] = useState<Finding[]>([]);
   const [ownership, setOwnership] = useState<OwnershipNode[]>([]);
+  const [verdict, setVerdict] = useState<VerdictOut | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -29,6 +31,8 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
     setDocuments(docs);
     setFindings(findingList);
     setOwnership(chain);
+    // 404 until the first analysis run exists; that is a normal state.
+    setVerdict(await api.getVerdict(propertyId).catch(() => null));
   }
 
   useEffect(() => {
@@ -112,6 +116,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
             </div>
           </div>
           <div className="space-y-6">
+            <VerdictBadge verdict={verdict} />
             <RiskIndicator score={property.risk_score} />
             <div className="card">
               <h2 className="mb-4 text-lg font-semibold">Ownership Chain</h2>

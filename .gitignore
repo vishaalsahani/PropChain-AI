@@ -20,3 +20,6 @@ contracts/deployments/
 .pytest_cache/
 backend/.pytest_cache/
 
+# TypeScript build info (written by tsc/next type checks)
+*.tsbuildinfo
+

@@ -97,6 +97,9 @@ class OwnershipNodeOut(BaseModel):
     transaction_date: str
     document_ref: str | None
     sequence: int
+    # Phase 3 (AC-5): transferor of the step and whether the link is unevidenced.
+    from_party: str | None = None
+    gap_flag: bool = False
 
     class Config:
         from_attributes = True
@@ -108,6 +111,21 @@ class AnalysisResult(BaseModel):
     ownership_chain: list[OwnershipNodeOut]
     risk_score: float
     summary: str
+    # Phase 3 (FR-8/AC-6): the run's verdict and the documented reasons behind it.
+    verdict: str | None = None
+    verdict_reasons: dict | None = None
+
+
+class VerdictOut(BaseModel):
+    """Latest run's verdict for one property (used by the property page)."""
+
+    property_id: int
+    analysis_run_id: int | None = None
+    verdict: str | None = None
+    reasons: list[str] = []
+    not_checked: list[str] = []
+    risk_score: float | None = None
+    engine_version: str | None = None
 
 
 class BlockchainVerifyResult(BaseModel):
