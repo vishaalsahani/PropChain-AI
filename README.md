@@ -61,7 +61,7 @@ Copy `.env.example` to `.env` in project root and adjust if needed.
 Optional system tool: **Tesseract OCR** — required for scanned-document OCR (digital PDFs use
 their text layer). If the binary is not on `PATH`, point `TESSERACT_CMD` at it in `.env`.
 
-### Engine selection (Phase 2)
+### Engine selection (Phases 2–3)
 
 Document intelligence sits behind frozen interfaces (`backend/app/services/interfaces.py`) and is
 selected per machine in `backend/.env` (read when the server runs from `backend/`):
@@ -71,14 +71,19 @@ selected per machine in `backend/.env` (read when the server runs from `backend/
 | `OCR_ENGINE` | `fake`, `tesseract` | `fake` | Tesseract OCR for scans; digital PDFs use their embedded text layer |
 | `DOC_CLASSIFIER_ENGINE` | `fake`, `keyword` | `fake` | Keyword/label fingerprinting → one of the 15 doc types |
 | `NLP_EXTRACTOR_ENGINE` | `fake`, `patterns` | `fake` | Label/regex pattern pack, EN + Marathi (Devanagari numerals, `MH-XXX-YYYY-NNNNN`, survey/Gat/CTS, area units → sqft, consideration) |
+| `CROSS_VALIDATOR_ENGINE` | `fake`, `matrix` | `fake` | Cross-document consistency matrix (`matrix-v1`): identifiers, names, places, area (±5%), boundaries, registration numbers, date order, hash verification — every finding cites both documents |
+| `OWNERSHIP_BUILDER_ENGINE` | `fake`, `evidence` | `fake` | Evidence-based ownership chain (`evidence-v1`): transfer events from deeds, ferfar mutations corroborate their deed, land records fall back to a current-holder node, unevidenced links get `gap_flag` |
+| `RULE_ENGINE` | `fake`, `mh_pack` | `fake` | Maharashtra rule pack (`mh-v1`): 12 screening rules (missing 7/12, identifier clash, chain gaps, mortgage, succession, litigation, area, hash mismatch) |
 
-`CROSS_VALIDATOR_ENGINE`, `OWNERSHIP_BUILDER_ENGINE` and `RULE_ENGINE` still select the Phase-1
-fakes — Phase 3/4 replace them. The active selection is visible in `GET /health`.
+The active selection is visible in `GET /health`. The default is `fake` so a fresh checkout boots
+without Tesseract/OpenCV; a real-engine dev machine sets `tesseract` / `keyword` / `patterns` /
+`matrix` / `evidence` / `mh_pack`. An unknown engine name logs a warning and falls back to fake; a
+known name whose module cannot be imported raises at first use (loud failure, never a silent mock).
 
-The default is `fake` so a fresh checkout boots without Tesseract/OpenCV; set the three values to
-`tesseract` / `keyword` / `patterns` for real extraction. An unknown engine name logs a warning and
-falls back to fake; a known name whose module cannot be imported raises at first use (loud failure,
-never a silent mock).
+Each analysis run records its verdict (**Verified / Needs Review / Flagged**, `GET /analysis/{id}/verdict`)
+together with machine-readable reasons, including an explicit *not checked* list (RERA, litigation
+history, …) so unknowns are stated instead of guessed — see `backend/app/services/verdict.py` for the
+documented mapping from findings to verdict.
 
 ### Labelled fixtures + AC-2 accuracy harness
 
@@ -102,6 +107,28 @@ digital and scanned.
 > Honesty note: the fixture wording and the pattern pack were co-designed (see the `make_fixtures.py`
 > docstring), so this measures the end-to-end pipeline, not generalisation to unseen wording. The
 > independent acceptance dataset is Phase 10 work.
+
+### Seeded-error corpus + AC-3 detection harness
+
+`backend/scripts/make_error_set.py` generates 21 coherent per-property document sets (6 base
+documents each: two chained sale deeds, ferfar, 7/12 extract, NIL encumbrance certificate, property
+card). Every error case differs from the clean control by exactly one seeded inconsistency — survey
+mismatch, owner mismatch, area drift, boundary change, reused registration number, execution after
+registration, missing predecessor deed, mutation without its deed, mortgage/will/court overlays,
+agreement-only chain, profile-vs-document identifier clash, missing 7/12, hash mismatch, village/Gat
+mismatch — with the control and two error cases also generated in Marathi:
+
+```powershell
+cd backend
+.venv\Scripts\python.exe scripts\make_error_set.py      # writes %TEMP%\propchain_errorset
+.venv\Scripts\python.exe scripts\ac3_report.py          # score the real pipeline (needs Tesseract)
+```
+
+The harness runs the real chain (OCR → classify → extract → `matrix-v1` → `evidence-v1` → `mh-v1` →
+verdict) over each case and writes `backend/artifacts/phase3_ac3.md` (+ `.json`). Measured on this
+machine (2026-10-17): **AC-3 seeded-error detection 19/19 (100%, target ≥90%) · both controls clean
+(no false positives) · pinned verdicts 6/6**. Limitations (digital corpus, co-designed wording,
+metadata-level hash flip) are listed in the report itself.
 
 ### 4. Contracts (optional local EVM)
 
@@ -135,7 +162,8 @@ Services:
 1. Register a new account at `/register`
 2. Create a property profile
 3. Upload 1–2 property documents (any PDF/image)
-4. Click **Run Analysis** to generate findings and ownership chain
+4. Click **Run Analysis** to generate findings, an ownership chain and a due-diligence verdict
+   (Verified / Needs Review / Flagged, with reasons and a "not checked" list)
 5. Click **Register Hash** / **Verify** on a document for blockchain demo
 6. Download the PDF due-diligence report
 
@@ -148,7 +176,8 @@ Services:
 | POST | `/properties` | Create property |
 | GET | `/properties` | List properties |
 | POST | `/documents/upload/{id}` | Upload document |
-| POST | `/analysis/run/{id}` | Run analysis |
+| POST | `/analysis/run/{id}` | Run analysis (findings, ownership chain, verdict) |
+| GET | `/analysis/{id}/verdict` | Latest verdict + reasons + not-checked list |
 | POST | `/blockchain/register/{id}` | Register document hash |
 | POST | `/blockchain/verify/{id}` | Verify document integrity |
 | GET | `/reports/{id}/pdf` | Download report |
