@@ -1,0 +1,1163 @@
+{
+  "generated": "2026-10-17 07:01 UTC",
+  "fake": false,
+  "rows": [
+    {
+      "name": "control_clean",
+      "case": "control_clean",
+      "language": "english",
+      "injected": "nothing: internally consistent control",
+      "expected": [],
+      "observed": [],
+      "missing": [],
+      "detected": true,
+      "verdict": "verified",
+      "verdict_expected": "verified",
+      "verdict_ok": true,
+      "reasons": [
+        "No ownership, identity, area, encumbrance or document-integrity findings were raised by the automated checks."
+      ],
+      "not_checked": [
+        "RERA registration: not checked — no RERA document or project details were uploaded.",
+        "Court/litigation history: not checked — no court records were uploaded and no court-search service is connected."
+      ],
+      "chain": [
+        {
+          "sequence": 1,
+          "from": "Dagdu Shinde",
+          "to": "Vithal More",
+          "type": "sale",
+          "date": "1998-04-20",
+          "ref": "predecessor_sale_deed_1998.pdf",
+          "gap": false
+        },
+        {
+          "sequence": 2,
+          "from": "Vithal More",
+          "to": "Shantaram Pawar",
+          "type": "sale",
+          "date": "2009-08-10",
+          "ref": "sale_deed_2009.pdf; mutation: ferfar_2009.pdf",
+          "gap": false
+        }
+      ],
+      "findings": []
+    },
+    {
+      "name": "survey_mismatch",
+      "case": "survey_mismatch",
+      "language": "english",
+      "injected": "7/12 extract prints survey number 221/3",
+      "expected": [
+        "MATCH-SURVEY-001"
+      ],
+      "observed": [
+        "MATCH-SURVEY-001",
+        "MH-IDENT-002"
+      ],
+      "missing": [],
+      "detected": true,
+      "verdict": "flagged",
+      "verdict_expected": null,
+      "verdict_ok": null,
+      "reasons": [
+        "High: Survey Number mismatch across documents (MATCH-SURVEY-001)",
+        "High: Profile survey number differs from documents (MH-IDENT-002)"
+      ],
+      "not_checked": [
+        "RERA registration: not checked — no RERA document or project details were uploaded.",
+        "Court/litigation history: not checked — no court records were uploaded and no court-search service is connected."
+      ],
+      "chain": [
+        {
+          "sequence": 1,
+          "from": "Dagdu Shinde",
+          "to": "Vithal More",
+          "type": "sale",
+          "date": "1998-04-20",
+          "ref": "predecessor_sale_deed_1998.pdf",
+          "gap": false
+        },
+        {
+          "sequence": 2,
+          "from": "Vithal More",
+          "to": "Shantaram Pawar",
+          "type": "sale",
+          "date": "2009-08-10",
+          "ref": "sale_deed_2009.pdf; mutation: ferfar_2009.pdf",
+          "gap": false
+        }
+      ],
+      "findings": [
+        {
+          "rule_ref": "MATCH-SURVEY-001",
+          "category": "identity",
+          "title": "Survey Number mismatch across documents",
+          "severity": "high",
+          "confidence": 0.85,
+          "evidence": "221/2 in predecessor_sale_deed_1998.pdf (sale_deed), sale_deed_2009.pdf (sale_deed), ferfar_2009.pdf (ferfar), encumbrance_certificate_2024.pdf (ec), property_card_2024.pdf (property_card); 221/3 in 7_12_extract_2024.pdf (7_12_extract)",
+          "recommended_action": "Confirm which identifier belongs to the property; request the corrected document or a certified record."
+        },
+        {
+          "rule_ref": "MH-IDENT-002",
+          "category": "identity",
+          "title": "Profile survey number differs from documents",
+          "severity": "high",
+          "confidence": 0.85,
+          "evidence": "Profile: 221/2; extracted: 221/3 in 7_12_extract_2024.pdf",
+          "recommended_action": "Confirm which identifier is correct against the 7/12 extract and correct the profile or re-upload the document."
+        }
+      ]
+    },
+    {
+      "name": "owner_mismatch",
+      "case": "owner_mismatch",
+      "language": "english",
+      "injected": "7/12 extract names a different holder (Baban Kale)",
+      "expected": [
+        "MATCH-OWNER-001"
+      ],
+      "observed": [
+        "MATCH-OWNER-001"
+      ],
+      "missing": [],
+      "detected": true,
+      "verdict": "flagged",
+      "verdict_expected": null,
+      "verdict_ok": null,
+      "reasons": [
+        "High: Owner name mismatch across documents (MATCH-OWNER-001)"
+      ],
+      "not_checked": [
+        "RERA registration: not checked — no RERA document or project details were uploaded.",
+        "Court/litigation history: not checked — no court records were uploaded and no court-search service is connected."
+      ],
+      "chain": [
+        {
+          "sequence": 1,
+          "from": "Dagdu Shinde",
+          "to": "Vithal More",
+          "type": "sale",
+          "date": "1998-04-20",
+          "ref": "predecessor_sale_deed_1998.pdf",
+          "gap": false
+        },
+        {
+          "sequence": 2,
+          "from": "Vithal More",
+          "to": "Shantaram Pawar",
+          "type": "sale",
+          "date": "2009-08-10",
+          "ref": "sale_deed_2009.pdf; mutation: ferfar_2009.pdf",
+          "gap": false
+        }
+      ],
+      "findings": [
+        {
+          "rule_ref": "MATCH-OWNER-001",
+          "category": "identity",
+          "title": "Owner name mismatch across documents",
+          "severity": "high",
+          "confidence": 0.8,
+          "evidence": "Shantaram Pawar in ferfar_2009.pdf (ferfar), encumbrance_certificate_2024.pdf (ec), property_card_2024.pdf (property_card); Baban Kale in 7_12_extract_2024.pdf (7_12_extract)",
+          "recommended_action": "Verify the owner's identity against the latest land record (7/12 or property card) and the supporting deeds."
+        }
+      ]
+    },
+    {
+      "name": "area_drift",
+      "case": "area_drift",
+      "language": "english",
+      "injected": "2009 sale deed prints 2400 sq ft instead of 2000",
+      "expected": [
+        "MATCH-AREA-001"
+      ],
+      "observed": [
+        "MATCH-AREA-001",
+        "MH-AREA-001"
+      ],
+      "missing": [],
+      "detected": true,
+      "verdict": "needs_review",
+      "verdict_expected": null,
+      "verdict_ok": null,
+      "reasons": [
+        "Medium: Area discrepancy detected (MATCH-AREA-001)",
+        "Medium: Document area differs from the property profile (MH-AREA-001)"
+      ],
+      "not_checked": [
+        "RERA registration: not checked — no RERA document or project details were uploaded.",
+        "Court/litigation history: not checked — no court records were uploaded and no court-search service is connected."
+      ],
+      "chain": [
+        {
+          "sequence": 1,
+          "from": "Dagdu Shinde",
+          "to": "Vithal More",
+          "type": "sale",
+          "date": "1998-04-20",
+          "ref": "predecessor_sale_deed_1998.pdf",
+          "gap": false
+        },
+        {
+          "sequence": 2,
+          "from": "Vithal More",
+          "to": "Shantaram Pawar",
+          "type": "sale",
+          "date": "2009-08-10",
+          "ref": "sale_deed_2009.pdf; mutation: ferfar_2009.pdf",
+          "gap": false
+        }
+      ],
+      "findings": [
+        {
+          "rule_ref": "MATCH-AREA-001",
+          "category": "area",
+          "title": "Area discrepancy detected",
+          "severity": "medium",
+          "confidence": 0.8,
+          "evidence": "1999.93262 sqft (sqm as printed) in property_card_2024.pdf (property_card); 2000 sqft (sqft as printed) in predecessor_sale_deed_1998.pdf (sale_deed); 2000 sqft (sqft as printed) in ferfar_2009.pdf (ferfar); 2000 sqft (sqft as printed) in 7_12_extract_2024.pdf (7_12_extract); 2000 sqft (sqft as printed) in encumbrance_certificate_2024.pdf (ec); 2400 sqft (sqft as printed) in sale_deed_2009.pdf (sale_deed)",
+          "recommended_action": "Re-measure against the 7/12 extract and the property card; a material difference needs a surveyor's confirmation."
+        },
+        {
+          "rule_ref": "MH-AREA-001",
+          "category": "area",
+          "title": "Document area differs from the property profile",
+          "severity": "medium",
+          "confidence": 0.75,
+          "evidence": "Profile: 2000 sqft; documents: 2400 sqft (17% off)",
+          "recommended_action": "Re-check the area against the 7/12 extract and re-measure if needed."
+        }
+      ]
+    },
+    {
+      "name": "boundary_change",
+      "case": "boundary_change",
+      "language": "english",
+      "injected": "property card describes different boundaries",
+      "expected": [
+        "MATCH-BOUNDARY-001"
+      ],
+      "observed": [
+        "MATCH-BOUNDARY-001"
+      ],
+      "missing": [],
+      "detected": true,
+      "verdict": "needs_review",
+      "verdict_expected": null,
+      "verdict_ok": null,
+      "reasons": [
+        "Medium: Boundary description mismatch (MATCH-BOUNDARY-001)"
+      ],
+      "not_checked": [
+        "RERA registration: not checked — no RERA document or project details were uploaded.",
+        "Court/litigation history: not checked — no court records were uploaded and no court-search service is connected."
+      ],
+      "chain": [
+        {
+          "sequence": 1,
+          "from": "Dagdu Shinde",
+          "to": "Vithal More",
+          "type": "sale",
+          "date": "1998-04-20",
+          "ref": "predecessor_sale_deed_1998.pdf",
+          "gap": false
+        },
+        {
+          "sequence": 2,
+          "from": "Vithal More",
+          "to": "Shantaram Pawar",
+          "type": "sale",
+          "date": "2009-08-10",
+          "ref": "sale_deed_2009.pdf; mutation: ferfar_2009.pdf",
+          "gap": false
+        }
+      ],
+      "findings": [
+        {
+          "rule_ref": "MATCH-BOUNDARY-001",
+          "category": "area",
+          "title": "Boundary description mismatch",
+          "severity": "medium",
+          "confidence": 0.65,
+          "evidence": "predecessor_sale_deed_1998.pdf (sale_deed) says \"East: 30 ft DP road\"; property_card_2024.pdf (property_card) says \"East: canal\" | sale_deed_2009.pdf (sale_deed) says \"East: 30 ft DP road\"; property_card_2024.pdf (property_card) says \"East: canal\"",
+          "recommended_action": "Compare the boundary descriptions with the latest land record and site plan."
+        }
+      ]
+    },
+    {
+      "name": "duplicate_registration_number",
+      "case": "duplicate_registration_number",
+      "language": "english",
+      "injected": "1998 deed reuses the 2009 registration number",
+      "expected": [
+        "MATCH-REGNO-001"
+      ],
+      "observed": [
+        "MATCH-REGNO-001"
+      ],
+      "missing": [],
+      "detected": true,
+      "verdict": "needs_review",
+      "verdict_expected": null,
+      "verdict_ok": null,
+      "reasons": [
+        "Medium: Registration number reused across documents (MATCH-REGNO-001)"
+      ],
+      "not_checked": [
+        "RERA registration: not checked — no RERA document or project details were uploaded.",
+        "Court/litigation history: not checked — no court records were uploaded and no court-search service is connected."
+      ],
+      "chain": [
+        {
+          "sequence": 1,
+          "from": "Dagdu Shinde",
+          "to": "Vithal More",
+          "type": "sale",
+          "date": "1998-04-20",
+          "ref": "predecessor_sale_deed_1998.pdf",
+          "gap": false
+        },
+        {
+          "sequence": 2,
+          "from": "Vithal More",
+          "to": "Shantaram Pawar",
+          "type": "sale",
+          "date": "2009-08-10",
+          "ref": "sale_deed_2009.pdf; mutation: ferfar_2009.pdf",
+          "gap": false
+        }
+      ],
+      "findings": [
+        {
+          "rule_ref": "MATCH-REGNO-001",
+          "category": "identity",
+          "title": "Registration number reused across documents",
+          "severity": "medium",
+          "confidence": 0.75,
+          "evidence": "MH-PUN-2009-11223 appears in predecessor_sale_deed_1998.pdf (sale_deed), sale_deed_2009.pdf (sale_deed)",
+          "recommended_action": "Check the documents against the sub-registrar's index for a copy or a transcription error."
+        }
+      ]
+    },
+    {
+      "name": "date_inversion",
+      "case": "date_inversion",
+      "language": "english",
+      "injected": "2009 deed is executed after its registration date",
+      "expected": [
+        "MATCH-DATE-001"
+      ],
+      "observed": [
+        "MATCH-DATE-001"
+      ],
+      "missing": [],
+      "detected": true,
+      "verdict": "needs_review",
+      "verdict_expected": null,
+      "verdict_ok": null,
+      "reasons": [
+        "Medium: Execution date after registration date (MATCH-DATE-001)"
+      ],
+      "not_checked": [
+        "RERA registration: not checked — no RERA document or project details were uploaded.",
+        "Court/litigation history: not checked — no court records were uploaded and no court-search service is connected."
+      ],
+      "chain": [
+        {
+          "sequence": 1,
+          "from": "Dagdu Shinde",
+          "to": "Vithal More",
+          "type": "sale",
+          "date": "1998-04-20",
+          "ref": "predecessor_sale_deed_1998.pdf",
+          "gap": false
+        },
+        {
+          "sequence": 2,
+          "from": "Vithal More",
+          "to": "Shantaram Pawar",
+          "type": "sale",
+          "date": "2009-08-10",
+          "ref": "sale_deed_2009.pdf; mutation: ferfar_2009.pdf",
+          "gap": false
+        }
+      ],
+      "findings": [
+        {
+          "rule_ref": "MATCH-DATE-001",
+          "category": "identity",
+          "title": "Execution date after registration date",
+          "severity": "medium",
+          "confidence": 0.7,
+          "evidence": "sale_deed_2009.pdf (sale_deed): execution 2009-07-01, registration 2009-06-15",
+          "recommended_action": "Verify the dates against the registered instrument copy."
+        }
+      ]
+    },
+    {
+      "name": "predecessor_not_uploaded",
+      "case": "predecessor_not_uploaded",
+      "language": "english",
+      "injected": "the 1998 predecessor deed is missing from the uploads",
+      "expected": [
+        "MH-CHAIN-001"
+      ],
+      "observed": [
+        "MH-CHAIN-001"
+      ],
+      "missing": [],
+      "detected": true,
+      "verdict": "flagged",
+      "verdict_expected": "flagged",
+      "verdict_ok": true,
+      "reasons": [
+        "High: Ownership chain has an unevidenced step (MH-CHAIN-001)",
+        "Ownership step 1 (Vithal More → Shantaram Pawar) is not evidenced: sale_deed_2009.pdf; mutation: ferfar_2009.pdf"
+      ],
+      "not_checked": [
+        "RERA registration: not checked — no RERA document or project details were uploaded.",
+        "Court/litigation history: not checked — no court records were uploaded and no court-search service is connected."
+      ],
+      "chain": [
+        {
+          "sequence": 1,
+          "from": "Vithal More",
+          "to": "Shantaram Pawar",
+          "type": "sale",
+          "date": "2009-08-10",
+          "ref": "sale_deed_2009.pdf; mutation: ferfar_2009.pdf",
+          "gap": true
+        }
+      ],
+      "findings": [
+        {
+          "rule_ref": "MH-CHAIN-001",
+          "category": "ownership",
+          "title": "Ownership chain has an unevidenced step",
+          "severity": "high",
+          "confidence": 0.8,
+          "evidence": "Step 1: Vithal More → Shantaram Pawar (sale_deed_2009.pdf; mutation: ferfar_2009.pdf)",
+          "recommended_action": "Request the missing predecessor deed/mutation from the seller and upload it to close the chain."
+        }
+      ]
+    },
+    {
+      "name": "mutation_without_deed",
+      "case": "mutation_without_deed",
+      "language": "english",
+      "injected": "the ferfar mutation cites a sale deed that was not uploaded",
+      "expected": [
+        "MH-CHAIN-001"
+      ],
+      "observed": [
+        "MH-CHAIN-001"
+      ],
+      "missing": [],
+      "detected": true,
+      "verdict": "flagged",
+      "verdict_expected": "flagged",
+      "verdict_ok": true,
+      "reasons": [
+        "High: Ownership chain has an unevidenced step (MH-CHAIN-001)",
+        "Ownership step 2 (unknown transferor → Shantaram Pawar) is not evidenced: ferfar_2009.pdf"
+      ],
+      "not_checked": [
+        "RERA registration: not checked — no RERA document or project details were uploaded.",
+        "Court/litigation history: not checked — no court records were uploaded and no court-search service is connected."
+      ],
+      "chain": [
+        {
+          "sequence": 1,
+          "from": "Dagdu Shinde",
+          "to": "Vithal More",
+          "type": "sale",
+          "date": "1998-04-20",
+          "ref": "predecessor_sale_deed_1998.pdf",
+          "gap": false
+        },
+        {
+          "sequence": 2,
+          "from": null,
+          "to": "Shantaram Pawar",
+          "type": "mutation",
+          "date": "2009-08-10",
+          "ref": "ferfar_2009.pdf",
+          "gap": true
+        }
+      ],
+      "findings": [
+        {
+          "rule_ref": "MH-CHAIN-001",
+          "category": "ownership",
+          "title": "Ownership chain has an unevidenced step",
+          "severity": "high",
+          "confidence": 0.8,
+          "evidence": "Step 2: unknown transferor → Shantaram Pawar (ferfar_2009.pdf)",
+          "recommended_action": "Request the missing predecessor deed/mutation from the seller and upload it to close the chain."
+        }
+      ]
+    },
+    {
+      "name": "mortgage_overlay",
+      "case": "mortgage_overlay",
+      "language": "english",
+      "injected": "a mortgage deed is added to the uploads",
+      "expected": [
+        "MH-ENC-001"
+      ],
+      "observed": [
+        "MH-ENC-001"
+      ],
+      "missing": [],
+      "detected": true,
+      "verdict": "flagged",
+      "verdict_expected": null,
+      "verdict_ok": null,
+      "reasons": [
+        "High: Mortgage deed among the documents (MH-ENC-001)"
+      ],
+      "not_checked": [
+        "RERA registration: not checked — no RERA document or project details were uploaded.",
+        "Court/litigation history: not checked — no court records were uploaded and no court-search service is connected."
+      ],
+      "chain": [
+        {
+          "sequence": 1,
+          "from": "Dagdu Shinde",
+          "to": "Vithal More",
+          "type": "sale",
+          "date": "1998-04-20",
+          "ref": "predecessor_sale_deed_1998.pdf",
+          "gap": false
+        },
+        {
+          "sequence": 2,
+          "from": "Vithal More",
+          "to": "Shantaram Pawar",
+          "type": "sale",
+          "date": "2009-08-10",
+          "ref": "sale_deed_2009.pdf; mutation: ferfar_2009.pdf",
+          "gap": false
+        }
+      ],
+      "findings": [
+        {
+          "rule_ref": "MH-ENC-001",
+          "category": "mortgage",
+          "title": "Mortgage deed among the documents",
+          "severity": "high",
+          "confidence": 0.85,
+          "evidence": "Mortgage deed: mortgage_deed_2019.pdf",
+          "recommended_action": "Verify the charge in the encumbrance certificate and obtain the bank's no-dues / release deed."
+        }
+      ]
+    },
+    {
+      "name": "will_overlay",
+      "case": "will_overlay",
+      "language": "english",
+      "injected": "a will is added to the uploads",
+      "expected": [
+        "MH-SUCC-001"
+      ],
+      "observed": [
+        "MH-SUCC-001"
+      ],
+      "missing": [],
+      "detected": true,
+      "verdict": "needs_review",
+      "verdict_expected": null,
+      "verdict_ok": null,
+      "reasons": [
+        "Medium: Succession document requires verification (MH-SUCC-001)"
+      ],
+      "not_checked": [
+        "RERA registration: not checked — no RERA document or project details were uploaded.",
+        "Court/litigation history: not checked — no court records were uploaded and no court-search service is connected."
+      ],
+      "chain": [
+        {
+          "sequence": 1,
+          "from": "Dagdu Shinde",
+          "to": "Vithal More",
+          "type": "sale",
+          "date": "1998-04-20",
+          "ref": "predecessor_sale_deed_1998.pdf",
+          "gap": false
+        },
+        {
+          "sequence": 2,
+          "from": "Vithal More",
+          "to": "Shantaram Pawar",
+          "type": "sale",
+          "date": "2009-08-10",
+          "ref": "sale_deed_2009.pdf; mutation: ferfar_2009.pdf",
+          "gap": false
+        }
+      ],
+      "findings": [
+        {
+          "rule_ref": "MH-SUCC-001",
+          "category": "succession",
+          "title": "Succession document requires verification",
+          "severity": "medium",
+          "confidence": 0.8,
+          "evidence": "Succession-related documents: will_2020.pdf",
+          "recommended_action": "Obtain the probate/partition deed and confirm the legal-heir chain."
+        }
+      ]
+    },
+    {
+      "name": "court_overlay",
+      "case": "court_overlay",
+      "language": "english",
+      "injected": "a court document is added to the uploads",
+      "expected": [
+        "MH-LIT-001"
+      ],
+      "observed": [
+        "MH-LIT-001"
+      ],
+      "missing": [],
+      "detected": true,
+      "verdict": "flagged",
+      "verdict_expected": null,
+      "verdict_ok": null,
+      "reasons": [
+        "High: Court document among the documents (MH-LIT-001)"
+      ],
+      "not_checked": [
+        "RERA registration: not checked — no RERA document or project details were uploaded."
+      ],
+      "chain": [
+        {
+          "sequence": 1,
+          "from": "Dagdu Shinde",
+          "to": "Vithal More",
+          "type": "sale",
+          "date": "1998-04-20",
+          "ref": "predecessor_sale_deed_1998.pdf",
+          "gap": false
+        },
+        {
+          "sequence": 2,
+          "from": "Vithal More",
+          "to": "Shantaram Pawar",
+          "type": "sale",
+          "date": "2009-08-10",
+          "ref": "sale_deed_2009.pdf; mutation: ferfar_2009.pdf",
+          "gap": false
+        }
+      ],
+      "findings": [
+        {
+          "rule_ref": "MH-LIT-001",
+          "category": "litigation",
+          "title": "Court document among the documents",
+          "severity": "high",
+          "confidence": 0.85,
+          "evidence": "Court document: court_case_2021.pdf",
+          "recommended_action": "Search the court case status and obtain a certified copy of the order."
+        }
+      ]
+    },
+    {
+      "name": "agreement_only",
+      "case": "agreement_only",
+      "language": "english",
+      "injected": "the only transfer document is an unregistered agreement to sale",
+      "expected": [
+        "MH-CHAIN-002"
+      ],
+      "observed": [
+        "MH-CHAIN-002"
+      ],
+      "missing": [],
+      "detected": true,
+      "verdict": "needs_review",
+      "verdict_expected": null,
+      "verdict_ok": null,
+      "reasons": [
+        "Medium: Only an agreement to sale is available (MH-CHAIN-002)"
+      ],
+      "not_checked": [
+        "RERA registration: not checked — no RERA document or project details were uploaded.",
+        "Court/litigation history: not checked — no court records were uploaded and no court-search service is connected."
+      ],
+      "chain": [
+        {
+          "sequence": 1,
+          "from": "Vithal More",
+          "to": "Shantaram Pawar",
+          "type": "agreement",
+          "date": "2009-06-01",
+          "ref": "agreement_to_sale_2009.pdf",
+          "gap": false
+        }
+      ],
+      "findings": [
+        {
+          "rule_ref": "MH-CHAIN-002",
+          "category": "ownership",
+          "title": "Only an agreement to sale is available",
+          "severity": "medium",
+          "confidence": 0.8,
+          "evidence": "Ownership chain contains only an agreement step",
+          "recommended_action": "Ask for the executed and registered sale deed that followed the agreement."
+        }
+      ]
+    },
+    {
+      "name": "profile_identifier_mismatch",
+      "case": "profile_identifier_mismatch",
+      "language": "english",
+      "injected": "property profile says survey 999/9 (documents 221/2)",
+      "expected": [
+        "MH-IDENT-002"
+      ],
+      "observed": [
+        "MH-IDENT-002"
+      ],
+      "missing": [],
+      "detected": true,
+      "verdict": "flagged",
+      "verdict_expected": null,
+      "verdict_ok": null,
+      "reasons": [
+        "High: Profile survey number differs from documents (MH-IDENT-002)"
+      ],
+      "not_checked": [
+        "RERA registration: not checked — no RERA document or project details were uploaded.",
+        "Court/litigation history: not checked — no court records were uploaded and no court-search service is connected."
+      ],
+      "chain": [
+        {
+          "sequence": 1,
+          "from": "Dagdu Shinde",
+          "to": "Vithal More",
+          "type": "sale",
+          "date": "1998-04-20",
+          "ref": "predecessor_sale_deed_1998.pdf",
+          "gap": false
+        },
+        {
+          "sequence": 2,
+          "from": "Vithal More",
+          "to": "Shantaram Pawar",
+          "type": "sale",
+          "date": "2009-08-10",
+          "ref": "sale_deed_2009.pdf; mutation: ferfar_2009.pdf",
+          "gap": false
+        }
+      ],
+      "findings": [
+        {
+          "rule_ref": "MH-IDENT-002",
+          "category": "identity",
+          "title": "Profile survey number differs from documents",
+          "severity": "high",
+          "confidence": 0.85,
+          "evidence": "Profile: 999/9; extracted: 221/2 in predecessor_sale_deed_1998.pdf, 221/2 in sale_deed_2009.pdf, 221/2 in ferfar_2009.pdf, 221/2 in 7_12_extract_2024.pdf, 221/2 in encumbrance_certificate_2024.pdf, 221/2 in property_card_2024.pdf",
+          "recommended_action": "Confirm which identifier is correct against the 7/12 extract and correct the profile or re-upload the document."
+        }
+      ]
+    },
+    {
+      "name": "land_record_missing",
+      "case": "land_record_missing",
+      "language": "english",
+      "injected": "the 7/12 extract is not uploaded",
+      "expected": [
+        "MH-LAND-712"
+      ],
+      "observed": [
+        "MH-LAND-712"
+      ],
+      "missing": [],
+      "detected": true,
+      "verdict": "flagged",
+      "verdict_expected": null,
+      "verdict_ok": null,
+      "reasons": [
+        "High: 7/12 extract not found (MH-LAND-712)"
+      ],
+      "not_checked": [
+        "RERA registration: not checked — no RERA document or project details were uploaded.",
+        "Court/litigation history: not checked — no court records were uploaded and no court-search service is connected."
+      ],
+      "chain": [
+        {
+          "sequence": 1,
+          "from": "Dagdu Shinde",
+          "to": "Vithal More",
+          "type": "sale",
+          "date": "1998-04-20",
+          "ref": "predecessor_sale_deed_1998.pdf",
+          "gap": false
+        },
+        {
+          "sequence": 2,
+          "from": "Vithal More",
+          "to": "Shantaram Pawar",
+          "type": "sale",
+          "date": "2009-08-10",
+          "ref": "sale_deed_2009.pdf; mutation: ferfar_2009.pdf",
+          "gap": false
+        }
+      ],
+      "findings": [
+        {
+          "rule_ref": "MH-LAND-712",
+          "category": "missing-document",
+          "title": "7/12 extract not found",
+          "severity": "high",
+          "confidence": 0.9,
+          "evidence": "No document classified as 7/12 among the uploads",
+          "recommended_action": "Download the current 7/12 extract from Mahabhulekh and upload it."
+        }
+      ]
+    },
+    {
+      "name": "hash_tampered",
+      "case": "hash_tampered",
+      "language": "english",
+      "injected": "one document's stored hash no longer matches (metadata flip)",
+      "expected": [
+        "MH-INTEGRITY-001"
+      ],
+      "observed": [
+        "MATCH-INTEGRITY-001",
+        "MH-INTEGRITY-001"
+      ],
+      "missing": [],
+      "detected": true,
+      "verdict": "flagged",
+      "verdict_expected": "flagged",
+      "verdict_ok": true,
+      "reasons": [
+        "Critical: Hash verification failed (MATCH-INTEGRITY-001)",
+        "Critical: Registered hash does not match the file (MH-INTEGRITY-001)"
+      ],
+      "not_checked": [
+        "RERA registration: not checked — no RERA document or project details were uploaded.",
+        "Court/litigation history: not checked — no court records were uploaded and no court-search service is connected."
+      ],
+      "chain": [
+        {
+          "sequence": 1,
+          "from": "Dagdu Shinde",
+          "to": "Vithal More",
+          "type": "sale",
+          "date": "1998-04-20",
+          "ref": "predecessor_sale_deed_1998.pdf",
+          "gap": false
+        },
+        {
+          "sequence": 2,
+          "from": "Vithal More",
+          "to": "Shantaram Pawar",
+          "type": "sale",
+          "date": "2009-08-10",
+          "ref": "sale_deed_2009.pdf; mutation: ferfar_2009.pdf",
+          "gap": false
+        }
+      ],
+      "findings": [
+        {
+          "rule_ref": "MATCH-INTEGRITY-001",
+          "category": "document-integrity",
+          "title": "Hash verification failed",
+          "severity": "critical",
+          "confidence": 0.95,
+          "evidence": "sale_deed_2009.pdf (sale_deed): stored hash mismatch on verification",
+          "recommended_action": "Re-obtain the document from the source and re-register its hash."
+        },
+        {
+          "rule_ref": "MH-INTEGRITY-001",
+          "category": "document-integrity",
+          "title": "Registered hash does not match the file",
+          "severity": "critical",
+          "confidence": 0.95,
+          "evidence": "Hash mismatch on: sale_deed_2009.pdf",
+          "recommended_action": "Re-obtain the document from the source; treat the changed file as untrusted."
+        }
+      ]
+    },
+    {
+      "name": "village_mismatch",
+      "case": "village_mismatch",
+      "language": "english",
+      "injected": "7/12 extract is for a different village (Undri)",
+      "expected": [
+        "MATCH-VILLAGE-001"
+      ],
+      "observed": [
+        "MATCH-VILLAGE-001"
+      ],
+      "missing": [],
+      "detected": true,
+      "verdict": "needs_review",
+      "verdict_expected": null,
+      "verdict_ok": null,
+      "reasons": [
+        "Medium: Village mismatch across documents (MATCH-VILLAGE-001)"
+      ],
+      "not_checked": [
+        "RERA registration: not checked — no RERA document or project details were uploaded.",
+        "Court/litigation history: not checked — no court records were uploaded and no court-search service is connected."
+      ],
+      "chain": [
+        {
+          "sequence": 1,
+          "from": "Dagdu Shinde",
+          "to": "Vithal More",
+          "type": "sale",
+          "date": "1998-04-20",
+          "ref": "predecessor_sale_deed_1998.pdf",
+          "gap": false
+        },
+        {
+          "sequence": 2,
+          "from": "Vithal More",
+          "to": "Shantaram Pawar",
+          "type": "sale",
+          "date": "2009-08-10",
+          "ref": "sale_deed_2009.pdf; mutation: ferfar_2009.pdf",
+          "gap": false
+        }
+      ],
+      "findings": [
+        {
+          "rule_ref": "MATCH-VILLAGE-001",
+          "category": "identity",
+          "title": "Village mismatch across documents",
+          "severity": "medium",
+          "confidence": 0.7,
+          "evidence": "Wagholi in predecessor_sale_deed_1998.pdf (sale_deed), sale_deed_2009.pdf (sale_deed), ferfar_2009.pdf (ferfar), encumbrance_certificate_2024.pdf (ec), property_card_2024.pdf (property_card); Undri in 7_12_extract_2024.pdf (7_12_extract)",
+          "recommended_action": "Verify the owner's identity against the latest land record (7/12 or property card) and the supporting deeds."
+        }
+      ]
+    },
+    {
+      "name": "gat_mismatch",
+      "case": "gat_mismatch",
+      "language": "english",
+      "injected": "1998 deed prints Gat No. 512 instead of 318",
+      "expected": [
+        "MATCH-GAT-001"
+      ],
+      "observed": [
+        "MATCH-GAT-001",
+        "MH-IDENT-002"
+      ],
+      "missing": [],
+      "detected": true,
+      "verdict": "flagged",
+      "verdict_expected": null,
+      "verdict_ok": null,
+      "reasons": [
+        "High: Gat Number mismatch across documents (MATCH-GAT-001)",
+        "High: Profile gat number differs from documents (MH-IDENT-002)"
+      ],
+      "not_checked": [
+        "RERA registration: not checked — no RERA document or project details were uploaded.",
+        "Court/litigation history: not checked — no court records were uploaded and no court-search service is connected."
+      ],
+      "chain": [
+        {
+          "sequence": 1,
+          "from": "Dagdu Shinde",
+          "to": "Vithal More",
+          "type": "sale",
+          "date": "1998-04-20",
+          "ref": "predecessor_sale_deed_1998.pdf",
+          "gap": false
+        },
+        {
+          "sequence": 2,
+          "from": "Vithal More",
+          "to": "Shantaram Pawar",
+          "type": "sale",
+          "date": "2009-08-10",
+          "ref": "sale_deed_2009.pdf; mutation: ferfar_2009.pdf",
+          "gap": false
+        }
+      ],
+      "findings": [
+        {
+          "rule_ref": "MATCH-GAT-001",
+          "category": "identity",
+          "title": "Gat Number mismatch across documents",
+          "severity": "high",
+          "confidence": 0.85,
+          "evidence": "318 in sale_deed_2009.pdf (sale_deed), 7_12_extract_2024.pdf (7_12_extract); 512 in predecessor_sale_deed_1998.pdf (sale_deed)",
+          "recommended_action": "Confirm which identifier belongs to the property; request the corrected document or a certified record."
+        },
+        {
+          "rule_ref": "MH-IDENT-002",
+          "category": "identity",
+          "title": "Profile gat number differs from documents",
+          "severity": "high",
+          "confidence": 0.85,
+          "evidence": "Profile: 318; extracted: 512 in predecessor_sale_deed_1998.pdf",
+          "recommended_action": "Confirm which identifier is correct against the 7/12 extract and correct the profile or re-upload the document."
+        }
+      ]
+    },
+    {
+      "name": "control_clean__mr",
+      "case": "control_clean",
+      "language": "marathi",
+      "injected": "nothing: internally consistent control",
+      "expected": [],
+      "observed": [],
+      "missing": [],
+      "detected": true,
+      "verdict": "verified",
+      "verdict_expected": "verified",
+      "verdict_ok": true,
+      "reasons": [
+        "No ownership, identity, area, encumbrance or document-integrity findings were raised by the automated checks."
+      ],
+      "not_checked": [
+        "RERA registration: not checked — no RERA document or project details were uploaded.",
+        "Court/litigation history: not checked — no court records were uploaded and no court-search service is connected."
+      ],
+      "chain": [
+        {
+          "sequence": 1,
+          "from": "दगडू शिंदे",
+          "to": "विठ्ठल मोरे",
+          "type": "sale",
+          "date": "1998-04-20",
+          "ref": "predecessor_sale_deed_1998.pdf",
+          "gap": false
+        },
+        {
+          "sequence": 2,
+          "from": "विठ्ठल मोरे",
+          "to": "शंताराम पवार",
+          "type": "sale",
+          "date": "2009-06-15",
+          "ref": "sale_deed_2009.pdf",
+          "gap": false
+        }
+      ],
+      "findings": []
+    },
+    {
+      "name": "survey_mismatch__mr",
+      "case": "survey_mismatch",
+      "language": "marathi",
+      "injected": "7/12 extract prints survey number 221/3",
+      "expected": [
+        "MATCH-SURVEY-001"
+      ],
+      "observed": [
+        "MATCH-SURVEY-001",
+        "MH-IDENT-002"
+      ],
+      "missing": [],
+      "detected": true,
+      "verdict": "flagged",
+      "verdict_expected": null,
+      "verdict_ok": null,
+      "reasons": [
+        "High: Survey Number mismatch across documents (MATCH-SURVEY-001)",
+        "High: Profile survey number differs from documents (MH-IDENT-002)"
+      ],
+      "not_checked": [
+        "RERA registration: not checked — no RERA document or project details were uploaded.",
+        "Court/litigation history: not checked — no court records were uploaded and no court-search service is connected."
+      ],
+      "chain": [
+        {
+          "sequence": 1,
+          "from": "दगडू शिंदे",
+          "to": "विठ्ठल मोरे",
+          "type": "sale",
+          "date": "1998-04-20",
+          "ref": "predecessor_sale_deed_1998.pdf",
+          "gap": false
+        },
+        {
+          "sequence": 2,
+          "from": "विठ्ठल मोरे",
+          "to": "शंताराम पवार",
+          "type": "sale",
+          "date": "2009-06-15",
+          "ref": "sale_deed_2009.pdf",
+          "gap": false
+        }
+      ],
+      "findings": [
+        {
+          "rule_ref": "MATCH-SURVEY-001",
+          "category": "identity",
+          "title": "Survey Number mismatch across documents",
+          "severity": "high",
+          "confidence": 0.85,
+          "evidence": "221/2 in predecessor_sale_deed_1998.pdf (sale_deed), sale_deed_2009.pdf (sale_deed), ferfar_2009.pdf (ferfar), encumbrance_certificate_2024.pdf (ec), property_card_2024.pdf (property_card); 221/3 in 7_12_extract_2024.pdf (7_12_extract)",
+          "recommended_action": "Confirm which identifier belongs to the property; request the corrected document or a certified record."
+        },
+        {
+          "rule_ref": "MH-IDENT-002",
+          "category": "identity",
+          "title": "Profile survey number differs from documents",
+          "severity": "high",
+          "confidence": 0.85,
+          "evidence": "Profile: 221/2; extracted: 221/3 in 7_12_extract_2024.pdf",
+          "recommended_action": "Confirm which identifier is correct against the 7/12 extract and correct the profile or re-upload the document."
+        }
+      ]
+    },
+    {
+      "name": "predecessor_not_uploaded__mr",
+      "case": "predecessor_not_uploaded",
+      "language": "marathi",
+      "injected": "the 1998 predecessor deed is missing from the uploads",
+      "expected": [
+        "MH-CHAIN-001"
+      ],
+      "observed": [
+        "MH-CHAIN-001"
+      ],
+      "missing": [],
+      "detected": true,
+      "verdict": "flagged",
+      "verdict_expected": "flagged",
+      "verdict_ok": true,
+      "reasons": [
+        "High: Ownership chain has an unevidenced step (MH-CHAIN-001)",
+        "Ownership step 1 (विठ्ठल मोरे → शंताराम पवार) is not evidenced: sale_deed_2009.pdf"
+      ],
+      "not_checked": [
+        "RERA registration: not checked — no RERA document or project details were uploaded.",
+        "Court/litigation history: not checked — no court records were uploaded and no court-search service is connected."
+      ],
+      "chain": [
+        {
+          "sequence": 1,
+          "from": "विठ्ठल मोरे",
+          "to": "शंताराम पवार",
+          "type": "sale",
+          "date": "2009-06-15",
+          "ref": "sale_deed_2009.pdf",
+          "gap": true
+        }
+      ],
+      "findings": [
+        {
+          "rule_ref": "MH-CHAIN-001",
+          "category": "ownership",
+          "title": "Ownership chain has an unevidenced step",
+          "severity": "high",
+          "confidence": 0.8,
+          "evidence": "Step 1: विठ्ठल मोरे → शंताराम पवार (sale_deed_2009.pdf)",
+          "recommended_action": "Request the missing predecessor deed/mutation from the seller and upload it to close the chain."
+        }
+      ]
+    }
+  ]
+}
