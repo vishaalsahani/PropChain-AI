@@ -61,13 +61,25 @@ _COMPONENTS: dict[str, tuple[str, dict[str, str]]] = {
     ),
     "cross_validator": (
         "cross_validator_engine",
-        {"fake": "app.services.fakes:FakeCrossValidator"},
+        {
+            "fake": "app.services.fakes:FakeCrossValidator",
+            "matrix": "app.services.cross_validate:MatrixCrossValidator",
+        },
     ),
     "ownership_builder": (
         "ownership_builder_engine",
-        {"fake": "app.services.fakes:FakeOwnershipGraphBuilder"},
+        {
+            "fake": "app.services.fakes:FakeOwnershipGraphBuilder",
+            "evidence": "app.services.ownership_evidence:EvidenceOwnershipBuilder",
+        },
     ),
-    "rule_engine": ("rule_engine", {"fake": "app.services.fakes:FakeRuleEngine"}),
+    "rule_engine": (
+        "rule_engine",
+        {
+            "fake": "app.services.fakes:FakeRuleEngine",
+            "mh_pack": "app.services.rules_mh:MaharashtraRuleEngine",
+        },
+    ),
 }
 
 _CACHE: dict[str, Any] = {}

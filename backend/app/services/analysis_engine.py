@@ -1,8 +1,9 @@
-"""Analysis pipeline orchestration (Phase 2).
+"""Analysis pipeline orchestration (Phase 2; verdict since Phase 3).
 
 The engine contains no business logic: OCR, classification, field extraction,
-cross-document validation, ownership-chain building and rule evaluation are
-delegated to the swappable engines in ``app.services.registry``. This module:
+cross-document validation, ownership-chain building, rule evaluation and the
+FR-8 verdict are delegated to the swappable engines in ``app.services.registry``
+(plus the pure verdict policy in ``app.services.verdict``). This module:
 
   * drives the per-document pipeline (OCR -> language -> classification ->
     extraction -> normalization -> persistence) and stores page-level evidence,
@@ -38,6 +39,7 @@ from app.models import (
     RiskCategory,
     RiskFlag,
     Severity,
+    Verdict,
 )
 from app.services.registry import (
     get_cross_validator,
@@ -47,6 +49,7 @@ from app.services.registry import (
     get_ownership_builder,
     get_rule_engine,
 )
+from app.services.verdict import derive_verdict
 
 #: Pages inside ``ocr_text`` are separated with a form feed (the frozen
 #: convention documented in ``app.services.interfaces``).
@@ -66,15 +69,18 @@ CATEGORY_ALIASES = {
 def pipeline_engine_version() -> str:
     """Run-level engine tag composed from the configured components.
 
-    Truncated to fit ``AnalysisRun.engine_version`` (String(50)); per-field
-    provenance is stored on ``ExtractedField.extractor_version``.
+    Fits ``AnalysisRun.engine_version`` (String(120), widened in migration 0004);
+    per-field provenance is stored on ``ExtractedField.extractor_version``.
     """
     parts = [
         get_ocr_service().engine_version,
         get_doc_classifier().engine_version,
         get_nlp_extractor().engine_version,
+        get_cross_validator().engine_version,
+        get_ownership_builder().engine_version,
+        get_rule_engine().engine_version,
     ]
-    return ("phase-2|" + "|".join(parts))[:50]
+    return ("phase-3|" + "|".join(parts))[:120]
 
 
 def run_document_pipeline(db: Session, document: Document) -> Document:
@@ -180,7 +186,7 @@ def _blob_value(candidate) -> object | None:
 
 
 def run_property_analysis(db: Session, property_obj: Property) -> Property:
-    """Cross-document validation, ownership graph, and rule evaluation."""
+    """Cross-document validation, ownership graph, rule evaluation and verdict."""
     documents = (
         db.query(Document)
         .filter(Document.property_id == property_obj.id, Document.status == DocumentStatus.completed)
@@ -190,19 +196,63 @@ def run_property_analysis(db: Session, property_obj: Property) -> Property:
     extracted: dict[int, dict] = {}
     extracted_values: list[dict] = []
     document_meta: dict[int, dict] = {}
+    profile_documents: list[dict] = []
     for doc in documents:
-        document_meta[doc.id] = {"filename": doc.filename, "doc_type": doc.doc_type}
-        if doc.extracted_data:
-            payload = json.loads(doc.extracted_data)
+        payload = json.loads(doc.extracted_data) if doc.extracted_data else None
+        # Phase 3: the meta carries everything the ownership builder needs; the
+        # fake engines ignore the extra keys (contract stays signature-compatible).
+        document_meta[doc.id] = {
+            "filename": doc.filename,
+            "doc_type": doc.doc_type,
+            "language": doc.language,
+            "file_hash": doc.file_hash,
+            "blockchain_verified": doc.blockchain_verified,
+            "extracted": payload,
+        }
+        profile_documents.append(
+            {
+                "doc_id": doc.id,
+                "filename": doc.filename,
+                "doc_type": doc.doc_type,
+                "blockchain_verified": doc.blockchain_verified,
+            }
+        )
+        if payload:
             extracted[doc.id] = payload
             extracted_values.append(payload)
 
+    ownership_drafts = get_ownership_builder().build(document_meta)
     drafts = get_cross_validator().validate(extracted, document_meta)
     drafts += get_rule_engine().evaluate(
-        {"state": property_obj.state, "survey_number": property_obj.survey_number},
+        {
+            "state": property_obj.state,
+            "district": property_obj.district,
+            "taluka": property_obj.taluka,
+            "village": property_obj.village,
+            "survey_number": property_obj.survey_number,
+            "gat_number": property_obj.gat_number,
+            "cts_number": property_obj.cts_number,
+            "area_sqft": property_obj.area_sqft,
+            "area_unit": property_obj.area_unit.value,
+            # Phase 3 enrichment: the rule pack evaluates the chain it did not build.
+            "documents": profile_documents,
+            "ownership": [
+                {
+                    "from_party": node.from_party,
+                    "to_party": node.to_party,
+                    "transfer_type": node.transfer_type,
+                    "transfer_date": node.transfer_date,
+                    "document_ref": node.document_ref,
+                    "sequence": node.sequence,
+                    "gap_flag": node.gap_flag,
+                }
+                for node in ownership_drafts
+            ],
+        },
         extracted_values,
     )
-    ownership_drafts = get_ownership_builder().build(document_meta)
+
+    verdict = derive_verdict(drafts, ownership_drafts, profile_documents)
 
     # D10: the latest run owns the rows (AnalysisRun history is retained).
     db.query(RiskFlag).filter(RiskFlag.property_id == property_obj.id).delete()
@@ -213,7 +263,8 @@ def run_property_analysis(db: Session, property_obj: Property) -> Property:
         property_id=property_obj.id,
         status=AnalysisRunStatus.completed,
         engine_version=pipeline_engine_version(),
-        verdict=None,  # Phase 3 computes the verdict
+        verdict=Verdict(verdict.verdict),
+        verdict_reasons=verdict.to_dict(),
         started_at=now,
         finished_at=now,
     )
@@ -259,13 +310,25 @@ def run_property_analysis(db: Session, property_obj: Property) -> Property:
 
     run.risk_score = property_obj.risk_score
     run.summary = (
-        f"Analysis completed with {len(drafts)} findings and "
+        f"Verdict {verdict.verdict.replace('_', ' ')}: {len(drafts)} findings and "
         f"{len(ownership_drafts)} ownership nodes."
     )
-    property_obj.status = PropertyStatus.analyzed
+    property_obj.status = _property_status(verdict.verdict)
     db.commit()
     db.refresh(property_obj)
     return property_obj
+
+
+#: FR-8 verdict -> the property-level status it mirrors (enums.PropertyStatus).
+_PROPERTY_STATUS = {
+    "verified": PropertyStatus.analyzed,
+    "needs_review": PropertyStatus.needs_review,
+    "flagged": PropertyStatus.flagged,
+}
+
+
+def _property_status(verdict: str) -> PropertyStatus:
+    return _PROPERTY_STATUS.get(verdict, PropertyStatus.analyzed)
 
 
 def _risk_category(value: str) -> RiskCategory:

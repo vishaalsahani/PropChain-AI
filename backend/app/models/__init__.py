@@ -143,8 +143,9 @@ class AnalysisRun(Base):
     status: Mapped[AnalysisRunStatus] = mapped_column(
         db_enum(AnalysisRunStatus), default=AnalysisRunStatus.queued
     )
-    engine_version: Mapped[str] = mapped_column(String(50), default="phase-1")
-    verdict: Mapped[Verdict | None] = mapped_column(db_enum(Verdict), nullable=True)  # filled in Phase 3
+    engine_version: Mapped[str] = mapped_column(String(120), default="phase-1")
+    verdict: Mapped[Verdict | None] = mapped_column(db_enum(Verdict), nullable=True)  # FR-8, filled since Phase 3
+    verdict_reasons: Mapped[dict | None] = mapped_column(JsonType, nullable=True)  # Phase 3: {"verdict","reasons","not_checked"}
     risk_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

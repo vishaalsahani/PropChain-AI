@@ -41,6 +41,8 @@ def health():
             "ocr_pipeline": settings.ocr_engine,
             "doc_classifier": settings.doc_classifier_engine,
             "nlp_extractor": settings.nlp_extractor_engine,
+            "cross_validator": settings.cross_validator_engine,
+            "ownership_builder": settings.ownership_builder_engine,
             "rule_engine": settings.rule_engine,
             "blockchain": "mock" if settings.blockchain_mock_mode else "evm",
         },
