@@ -54,9 +54,21 @@ AREA_TO_SQFT: dict[str, float] = {
     "hectare": 107639.0,
 }
 
-FONT_FILE = Path(r"C:\Windows\Fonts\mangal.ttf")
-#: MuPDF 1.28.2 resolves a plain path but not the file:/// URL form.
-FONT_URL = str(FONT_FILE).replace("\\", "/")
+#: Bundled Mukta covers both Latin and Devanagari, so generated fixtures are
+#: identical on Windows and Linux CI. The Windows Mangal path remains a
+#: fallback for older checkouts; MuPDF 1.28.2 resolves a plain path but not
+#: the file:/// URL form.
+FONT_CANDIDATES = (
+    Path(__file__).resolve().parents[1] / "assets" / "fonts" / "Mukta-Regular.ttf",
+    Path(r"C:\Windows\Fonts\mangal.ttf"),
+    Path("/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf"),
+    Path("/usr/share/fonts/truetype/lohit-devanagari/Lohit-Devanagari.ttf"),
+)
+FONT_FILE = next(
+    (candidate for candidate in FONT_CANDIDATES if candidate.is_file()),
+    FONT_CANDIDATES[0],
+)
+FONT_URL = FONT_FILE.as_posix()
 
 A4_W, A4_H = 595.276, 841.89
 MARGIN = 50.0
