@@ -4,9 +4,10 @@
 
 .DESCRIPTION
     Checks prerequisites, creates the backend virtualenv with uv when missing,
-    installs backend/requirements.txt, then runs `npm ci` in frontend/ and
-    contracts/. It never starts any server — run the follow-up commands printed
-    at the end (or see README.md -> "Setup on a new machine") when you want to.
+    creates backend/.env from .env.example when missing, installs
+    backend/requirements.txt, then runs `npm ci` in frontend/ and contracts/.
+    It never starts any server — run the follow-up commands printed at the end
+    (or see README.md -> "Quick start") when you want to.
 
     Safe to re-run: existing venv/node_modules are reused, every step is skipped
     when it is already done.

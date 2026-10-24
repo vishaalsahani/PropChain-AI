@@ -50,7 +50,7 @@ Current verification on the development machine:
   match **6/6**.
 - `AC-2` pipeline accuracy: **18/18** document classifications and **136/136** scored fields on the
   labelled corpus.
-- Frontend `npm run typecheck` and production `npm run build` pass.
+- Frontend `npm run typecheck` and production `npm run build` pass; **5** Hardhat contract tests pass.
 
 The accuracy numbers are measured on co-designed fixtures; they demonstrate the end-to-end pipeline,
 not generalisation to unseen legal wording. The independent acceptance set is later work. See
@@ -73,7 +73,7 @@ not generalisation to unseen legal wording. The independent acceptance set is la
 From a PowerShell prompt:
 
 ```powershell
-git clone https://github.com/vishal5ahani/PropChain-AI.git
+git clone https://github.com/vishal-sahani/PropChain-AI.git
 cd PropChain-AI
 
 powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
