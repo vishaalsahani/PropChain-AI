@@ -1,260 +1,114 @@
-# PropChain-AI — Miniature Web App
+# PropChain-AI
 
-Blockchain-based AI system for property document analysis (academic prototype).
+**AI-assisted property due diligence for Maharashtra.** Upload a property's documents, get a
+document-by-document cross-check, an evidence-based ownership chain, and a screening verdict with
+its reasons — and an explicit list of what was **not** checked.
 
-## Project Structure
+PropChain-AI is an academic prototype. It is a reviewer aid, **not a legal title determination**.
 
-```
-PropChain/
-├── backend/          # FastAPI REST API
-├── frontend/         # Next.js + TypeScript + Tailwind
-├── contracts/        # Solidity document registry
-├── docker-compose.yml
-└── .env.example
-```
+<p align="center">
+  <a href="docs/screenshots/landing.png"><img src="docs/screenshots/landing.png" alt="PropChain-AI landing page" width="49%"></a>
+  <a href="docs/screenshots/dashboard.png"><img src="docs/screenshots/dashboard.png" alt="PropChain-AI dashboard" width="49%"></a>
+</p>
+<p align="center">
+  <a href="docs/screenshots/property-verified.png"><img src="docs/screenshots/property-verified.png" alt="Verified property workspace" width="49%"></a>
+  <a href="docs/screenshots/property-flagged.png"><img src="docs/screenshots/property-flagged.png" alt="Flagged property workspace" width="49%"></a>
+</p>
 
-## Components Included
+## What it does
 
-| Component | Status | Description |
-|-----------|--------|-------------|
-| Auth (JWT) | Working | Register, login, protected routes |
-| Property Management | Working | Create/list/view properties |
-| Document Upload | Working | PDF/JPG/PNG upload + SHA-256 hash |
-| OCR/NLP Pipeline | Working | Real engines (Phase 2): Tesseract OCR + PDF text layer, keyword doc classifier (15 types, EN/MR), pattern-based field extraction |
-| Analysis Engine | Partial | Consistency checks run on extracted values; the ownership-chain builder is still the Phase-1 demo chain (real builder: Phase 3) |
-| Rule Engine | Stub | Maharashtra demo rules (DB-backed rule packs: Phase 4) |
-| Blockchain Module | Stub/Mock | Hash register + verify (mock mode default) |
-| Report Generator | Working | PDF due-diligence report download |
-| Frontend Dashboard | Working | Full UI for all flows |
+- **Extracts** text from digital PDFs and scanned PDF/JPEG/PNG documents (Tesseract OCR).
+- **Classifies** 15 Indian property-document types in English and Marathi.
+- **Extracts** parties, survey/Gat/CTS numbers, area, registration numbers, dates, consideration,
+  boundaries, and other fields with a label/regex pattern pack.
+- **Cross-checks** identifiers, names, places, areas, boundaries, dates, registration numbers, and
+  document hashes in a pairwise consistency matrix. Every finding cites the documents involved.
+- **Builds an ownership chain** from transfer evidence, with ferfar and land-record corroboration;
+  unevidenced links are marked as gaps rather than guessed.
+- **Applies the `mh-v1` Maharashtra screening pack**: missing 7/12, identifier clashes, chain gaps,
+  mortgages, succession, litigation, area, and document-integrity checks.
+- **Produces a verdict**: `Verified`, `Needs Review`, or `Flagged`, with machine-readable reasons
+  and an explicit *not checked* list.
+- **Keeps documents off-chain.** Only SHA-256 hashes are registered; the blockchain adapter is
+  mocked by default and can be pointed at a local Hardhat chain.
+- **Exports a PDF due-diligence report** for the latest analysis run.
 
-## Quick Start (Local)
+## Status
 
-### 1. Backend
+| Phase | Scope | State |
+|---|---|---|
+| 0 | Repository foundation, local run path, environment | Complete |
+| 1 | Auth, properties, document upload, SHA-256 registry, PDF report | Complete |
+| 2 | Real OCR / classifier / field-extraction engines and AC-2 accuracy harness | Complete |
+| 3 | Matrix cross-validation, evidence-based ownership, `mh-v1` rule pack, verdict API/UI, AC-3 corpus | Complete |
+| 4 | DB-backed, editable rule packs | Next |
 
-Requires Python 3.12 (3.13+ untested).
+Current verification on the development machine:
 
-```powershell
-cd backend
-uv venv --python 3.12 .venv                                  # or: python -m venv .venv
-uv pip install --python .venv\Scripts\python.exe -r requirements.txt
-.venv\Scripts\python.exe -m uvicorn app.main:app --reload
-```
+- **226 backend tests**, 0 failures.
+- `AC-3` seeded-error detection: **19/19 (100%)**; both clean controls stay clean; pinned verdicts
+  match **6/6**.
+- `AC-2` pipeline accuracy: **18/18** document classifications and **136/136** scored fields on the
+  labelled corpus.
+- Frontend `npm run typecheck` and production `npm run build` pass.
 
-API docs: http://localhost:8000/docs
+The accuracy numbers are measured on co-designed fixtures; they demonstrate the end-to-end pipeline,
+not generalisation to unseen legal wording. The independent acceptance set is later work. See
+[`backend/artifacts/phase3_ac3.md`](backend/artifacts/phase3_ac3.md) and
+[`backend/artifacts/phase2_accuracy.md`](backend/artifacts/phase2_accuracy.md).
 
-### 2. Frontend
-
-Requires Node 20+ (project runs Next 16 + React 19).
-
-```powershell
-cd frontend
-npm install
-npm run dev
-```
-
-App: http://localhost:3000
-
-### 3. Environment
-
-Copy `.env.example` to `.env` in project root and adjust if needed.
-
-Optional system tool: **Tesseract OCR** — required for scanned-document OCR (digital PDFs use
-their text layer). If the binary is not on `PATH`, point `TESSERACT_CMD` at it in `.env`.
-
-### Engine selection (Phases 2–3)
-
-Document intelligence sits behind frozen interfaces (`backend/app/services/interfaces.py`) and is
-selected per machine in `backend/.env` (read when the server runs from `backend/`):
-
-| Setting | Values | Code default | Effect |
-|---|---|---|---|
-| `OCR_ENGINE` | `fake`, `tesseract` | `fake` | Tesseract OCR for scans; digital PDFs use their embedded text layer |
-| `DOC_CLASSIFIER_ENGINE` | `fake`, `keyword` | `fake` | Keyword/label fingerprinting → one of the 15 doc types |
-| `NLP_EXTRACTOR_ENGINE` | `fake`, `patterns` | `fake` | Label/regex pattern pack, EN + Marathi (Devanagari numerals, `MH-XXX-YYYY-NNNNN`, survey/Gat/CTS, area units → sqft, consideration) |
-| `CROSS_VALIDATOR_ENGINE` | `fake`, `matrix` | `fake` | Cross-document consistency matrix (`matrix-v1`): identifiers, names, places, area (±5%), boundaries, registration numbers, date order, hash verification — every finding cites both documents |
-| `OWNERSHIP_BUILDER_ENGINE` | `fake`, `evidence` | `fake` | Evidence-based ownership chain (`evidence-v1`): transfer events from deeds, ferfar mutations corroborate their deed, land records fall back to a current-holder node, unevidenced links get `gap_flag` |
-| `RULE_ENGINE` | `fake`, `mh_pack` | `fake` | Maharashtra rule pack (`mh-v1`): 12 screening rules (missing 7/12, identifier clash, chain gaps, mortgage, succession, litigation, area, hash mismatch) |
-
-The active selection is visible in `GET /health`. The default is `fake` so a fresh checkout boots
-without Tesseract/OpenCV; a real-engine dev machine sets `tesseract` / `keyword` / `patterns` /
-`matrix` / `evidence` / `mh_pack`. An unknown engine name logs a warning and falls back to fake; a
-known name whose module cannot be imported raises at first use (loud failure, never a silent mock).
-
-Each analysis run records its verdict (**Verified / Needs Review / Flagged**, `GET /analysis/{id}/verdict`)
-together with machine-readable reasons, including an explicit *not checked* list (RERA, litigation
-history, …) so unknowns are stated instead of guessed — see `backend/app/services/verdict.py` for the
-documented mapping from findings to verdict.
-
-### Labelled fixtures + AC-2 accuracy harness
-
-`backend/scripts/make_fixtures.py` deterministically generates an 18-document English/Marathi corpus
-(digital PDFs with a text layer plus scanned PDF/JPEG/PNG variants with rotation, noise and JPEG
-artifacts) across 6 document types, with ground-truth JSON and a `_manifest.json`:
-
-```powershell
-cd backend
-.venv\Scripts\python.exe scripts\make_fixtures.py --verify    # writes %TEMP%\propchain_fixtures
-.venv\Scripts\python.exe scripts\accuracy_report.py           # score the real engines from .env
-.venv\Scripts\python.exe scripts\accuracy_report.py --fake    # smoke-run the harness itself
-```
-
-The harness drives the real pipeline (OCR → classify → extract) and scores it against the ground
-truth, writing `backend/artifacts/phase2_accuracy.md` (+ `.json`). Measured on this machine
-(Tesseract 5.5.3 + `keyword-v1` + `patterns-v1`, 2026-10-17): **classification 18/18 · AC-2 core
-fields (owner / survey / area / date) 54/54 · all scored fields 136/136**, for English and Marathi,
-digital and scanned.
-
-> Honesty note: the fixture wording and the pattern pack were co-designed (see the `make_fixtures.py`
-> docstring), so this measures the end-to-end pipeline, not generalisation to unseen wording. The
-> independent acceptance dataset is Phase 10 work.
-
-### Seeded-error corpus + AC-3 detection harness
-
-`backend/scripts/make_error_set.py` generates 21 coherent per-property document sets (6 base
-documents each: two chained sale deeds, ferfar, 7/12 extract, NIL encumbrance certificate, property
-card). Every error case differs from the clean control by exactly one seeded inconsistency — survey
-mismatch, owner mismatch, area drift, boundary change, reused registration number, execution after
-registration, missing predecessor deed, mutation without its deed, mortgage/will/court overlays,
-agreement-only chain, profile-vs-document identifier clash, missing 7/12, hash mismatch, village/Gat
-mismatch — with the control and two error cases also generated in Marathi:
-
-```powershell
-cd backend
-.venv\Scripts\python.exe scripts\make_error_set.py      # writes %TEMP%\propchain_errorset
-.venv\Scripts\python.exe scripts\ac3_report.py          # score the real pipeline (needs Tesseract)
-```
-
-The harness runs the real chain (OCR → classify → extract → `matrix-v1` → `evidence-v1` → `mh-v1` →
-verdict) over each case and writes `backend/artifacts/phase3_ac3.md` (+ `.json`). Measured on this
-machine (2026-10-17): **AC-3 seeded-error detection 19/19 (100%, target ≥90%) · both controls clean
-(no false positives) · pinned verdicts 6/6**. Limitations (digital corpus, co-designed wording,
-metadata-level hash flip) are listed in the report itself.
-
-### 4. Contracts (optional local EVM)
-
-```powershell
-cd contracts
-npm install
-npm run compile        # compile DocumentRegistry.sol (solc 0.8.20)
-npm run test           # hardhat contract tests
-npm run node           # terminal 1: local chain on http://127.0.0.1:8545
-npm run deploy:local   # terminal 2: deploy; writes deployments/localhost.json
-```
-
-## Docker (Full Stack)
-
-```powershell
-docker compose up --build
-```
-
-Services:
-- Frontend: http://localhost:3000
-- Backend: http://localhost:8000
-- PostgreSQL: localhost:5432
-- Ganache: localhost:8545
-
-> Docker is optional — the project runs fully with the local Python/Node setup above.
-> The `ganache` service is a legacy image (Truffle Suite was sunset in 2023); for local
-> chain development prefer `npm run node` inside `contracts/` (Hardhat).
-
-## Demo Workflow
-
-1. Register a new account at `/register`
-2. Create a property profile
-3. Upload 1–2 property documents (any PDF/image)
-4. Click **Run Analysis** to generate findings, an ownership chain and a due-diligence verdict
-   (Verified / Needs Review / Flagged, with reasons and a "not checked" list)
-5. Click **Register Hash** / **Verify** on a document for blockchain demo
-6. Download the PDF due-diligence report
-
-## API Endpoints
-
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| POST | `/auth/register` | Create account |
-| POST | `/auth/login` | Get JWT token |
-| POST | `/properties` | Create property |
-| GET | `/properties` | List properties |
-| POST | `/documents/upload/{id}` | Upload document |
-| POST | `/analysis/run/{id}` | Run analysis (findings, ownership chain, verdict) |
-| GET | `/analysis/{id}/verdict` | Latest verdict + reasons + not-checked list |
-| POST | `/blockchain/register/{id}` | Register document hash |
-| POST | `/blockchain/verify/{id}` | Verify document integrity |
-| GET | `/reports/{id}/pdf` | Download report |
-
-## Team
-
- Vishal Sahani
-
-## Disclaimer
-
-This system provides AI-assisted documentary analysis only. It does not establish legal title or replace professional legal advice.
-
-## Setup on a new machine
-
-Target platform: Windows + PowerShell. (The local Python/Node path below is the supported one;
-the `docker-compose.yml` route is **unsupported until Phase 5** — see the Docker note at the end of
-this section.)
+## Quick start (Windows)
 
 ### Prerequisites
 
 | Tool | Version | Notes |
-|------|---------|-------|
-| Python | 3.12 (3.13+ untested) | used via the project virtualenv |
-| [uv](https://docs.astral.sh/uv/) | any recent | creates the venv and installs backend deps |
-| Node.js + npm | Node 20+ | Next 16 + React 19, Hardhat |
+|---|---|---|
+| Python | 3.12 | the setup script creates `backend\.venv` |
+| [uv](https://docs.astral.sh/uv/) | recent | creates the venv and installs backend dependencies |
+| Node.js + npm | Node 20+ | Next.js 16 / React 19 and the Hardhat toolchain |
+| Tesseract OCR | optional | only needed for scanned images; digital PDFs use their text layer |
 
-Optional: [micromamba](https://mamba.readthedocs.io/) for the Tesseract OCR binary (scanned
-documents only).
+### Setup and launch
 
-### 1. Bootstrap (idempotent)
-
-From the repository root:
+From a PowerShell prompt:
 
 ```powershell
+git clone https://github.com/vishal5ahani/PropChain-AI.git
+cd PropChain-AI
+
 powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
+# setup created backend\.env; edit it and set a local SECRET_KEY
+
+powershell -ExecutionPolicy Bypass -File scripts\start-app.ps1
 ```
 
-`scripts\setup.ps1` checks that `uv`/`node`/`npm` exist, creates `backend\.venv` with
-`uv venv --python 3.12` when it is missing, installs `backend\requirements.txt`, then runs
-`npm ci` in `frontend\` and `contracts\`. It is safe to re-run and never starts a server.
-Skip parts with `-SkipBackend`, `-SkipFrontend` or `-SkipContracts`.
+`start-app.ps1` is the one-click development launcher:
 
-### 2. Environment file
+1. starts the FastAPI backend on `http://127.0.0.1:8000` (running Alembic migrations first when the
+   local database does not exist yet),
+2. starts the Next.js dev server on `http://localhost:3000` with `npm run dev`,
+3. waits for both to answer, then opens the landing page in the default browser.
+
+It is idempotent: anything already listening is reused. Server logs are written to
+`%TEMP%\propchain-logs\`. Pass `-Console` to see progress in the terminal.
+
+Open **<http://localhost:3000>** and register an account. If you are using the review machine's demo
+database, the seeded account is `demo@propchainai.com` / `demo1234`; a fresh clone has no seeded user.
+
+### Optional: desktop shortcut
+
+To create a desktop shortcut for the development launcher (using the bundled icon):
 
 ```powershell
-Copy-Item .env.example .env
+powershell -ExecutionPolicy Bypass -File scripts\create-shortcut.ps1
 ```
 
-`.env` lives in the project root and is read by the backend (`pydantic-settings`) and the
-frontend (`NEXT_PUBLIC_API_URL`). At minimum change `SECRET_KEY`; real environment variables
-always win over the `.env` file. (`.env` is resolved relative to the working directory, so a
-backend shell started in `backend\` reads `backend\.env` — that is where the Phase-2 engine
-selection below is kept on the demo machine. Both locations are gitignored.)
-
-### 3. Tesseract OCR (optional)
-
-Only needed for scanned documents — digital PDFs use their own text layer. The binary is a system
-package, not a pip package:
-
-```powershell
-micromamba create -y -p C:\Users\visha\tools\tessenv -c conda-forge tesseract
-```
-
-Then point `.env` at it (already the default in `.env.example`):
-
-```ini
-TESSERACT_CMD=C:\Users\visha\tools\tessenv\Library\bin\tesseract.exe
-TESSDATA_PREFIX=C:\Users\visha\tools\tessenv\share\tessdata
-```
-
-If Tesseract is missing entirely the app still runs; image-only documents simply are not OCR'd.
-
-### 4. Run the app
+### Manual launch (two terminals)
 
 ```powershell
 # terminal 1 — backend
 cd backend
+.venv\Scripts\python.exe -m alembic upgrade head
 .venv\Scripts\python.exe -m uvicorn app.main:app --reload
 
 # terminal 2 — frontend
@@ -262,22 +116,197 @@ cd frontend
 npm run dev
 ```
 
-API docs: http://localhost:8000/docs · UI: http://localhost:3000
+API docs: <http://localhost:8000/docs> · UI: <http://localhost:3000>
 
-### 5. Tests
+To stop the launcher's hidden servers, stop the processes listening on ports 8000 and 3000, or sign
+out/reboot. The launcher reuses them on the next click.
+
+## Try the sample documents
+
+The synthetic six-document set in [`docs/samples`](docs/samples) is a clean, internally consistent
+Maharashtra chain. Upload all six to a property with:
+
+| Field | Value |
+|---|---|
+| State / District / Taluka / Village | Maharashtra / Pune / Haveli / Wagholi |
+| Survey No. | 221/2 |
+| Gat No. | 318 |
+| Area | 2000 sq ft |
+
+Expected result: **Verified**, 0 findings, and the chain
+`Dagdu Shinde → Vithal More → Shantaram Pawar`.
+
+The files are fictional; see [`docs/samples/README.md`](docs/samples/README.md) for the full test
+recipe and the single-document negative test.
+
+## Configuration
+
+Copy `.env.example` to `backend\.env`; `scripts\setup.ps1` does this automatically on a new
+checkout. The launcher starts the backend from `backend\`, so `pydantic-settings` reads that file.
+Real environment variables override it. For a non-default frontend API URL, create
+`frontend\.env.local` with `NEXT_PUBLIC_API_URL`; otherwise the frontend uses
+`http://localhost:8000`. Both env files are gitignored.
+
+| Setting | Default | Purpose |
+|---|---|---|
+| `DATABASE_URL` | `sqlite:///./propchain.db` | SQLAlchemy database URL |
+| `SECRET_KEY` | `change-me-in-production` | JWT signing key; change locally |
+| `STORAGE_PATH` | `./storage` | Uploaded documents (kept out of git) |
+| `BLOCKCHAIN_RPC_URL` | `http://127.0.0.1:8545` | Local EVM endpoint |
+| `BLOCKCHAIN_MOCK_MODE` | `true` | Hash-register mock; set `false` for Hardhat |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Frontend API base URL (`frontend\.env.local`) |
+| `TESSERACT_CMD` | unset | Optional path to `tesseract.exe` |
+| `TESSDATA_PREFIX` | unset | Optional path to the Tesseract `tessdata` directory |
+
+### Engine selection
+
+Document intelligence sits behind frozen interfaces in
+[`backend/app/services/interfaces.py`](backend/app/services/interfaces.py). Select the real engines
+per machine in `backend\.env`:
+
+```ini
+OCR_ENGINE=tesseract
+DOC_CLASSIFIER_ENGINE=keyword
+NLP_EXTRACTOR_ENGINE=patterns
+CROSS_VALIDATOR_ENGINE=matrix
+OWNERSHIP_BUILDER_ENGINE=evidence
+RULE_ENGINE=mh_pack
+```
+
+| Setting | Values | Code default | Effect |
+|---|---|---|---|
+| `OCR_ENGINE` | `fake`, `tesseract` | `fake` | Tesseract OCR for scans; digital PDFs use their embedded text layer |
+| `DOC_CLASSIFIER_ENGINE` | `fake`, `keyword` | `fake` | Keyword/label fingerprinting across 15 document types |
+| `NLP_EXTRACTOR_ENGINE` | `fake`, `patterns` | `fake` | Label/regex pack, English + Marathi (Devanagari numerals, `MH-XXX-YYYY-NNNNN`, survey/Gat/CTS, area units → sqft, consideration) |
+| `CROSS_VALIDATOR_ENGINE` | `fake`, `matrix` | `fake` | `matrix-v1` pairwise consistency findings with document citations |
+| `OWNERSHIP_BUILDER_ENGINE` | `fake`, `evidence` | `fake` | `evidence-v1` transfer chain with corroboration and gap flags |
+| `RULE_ENGINE` | `fake`, `mh_pack` | `fake` | `mh-v1` 12-rule Maharashtra screening pack |
+
+The active selection is visible in `GET /health`. A fresh checkout starts with `fake` so it boots
+without Tesseract or OpenCV. Unknown engine names log a warning and fall back to fake; a known engine
+whose module cannot be imported fails loudly instead of silently mocking.
+
+### Tesseract (optional)
+
+Only needed for scanned documents. Install it through your package manager, for example:
+
+```powershell
+winget install UB-Mannheim.TesseractOCR
+# or, with micromamba:
+micromamba create -y -p "$HOME\tools\tessenv" -c conda-forge tesseract
+```
+
+Then point `.env` at the binary and tessdata directory if they are not on `PATH`:
+
+```ini
+TESSERACT_CMD=C:\Program Files\Tesseract-OCR\tesseract.exe
+TESSDATA_PREFIX=C:\Program Files\Tesseract-OCR\tessdata
+```
+
+If Tesseract is missing entirely, the app still runs; image-only documents are simply not OCR'd.
+
+## Tests and verification
+
+```powershell
+# backend: 226 tests, fake engines, isolated temp SQLite databases
+cd backend
+.venv\Scripts\python.exe -m pytest
+
+# frontend: type check and production build
+cd ..\frontend
+npm ci
+npm run typecheck
+npm run build
+
+# contracts (optional)
+cd ..\contracts
+npm ci
+npm run test
+```
+
+The backend suite boots the app per test module against its own temp database (migrated with
+Alembic) and temp storage directory; no live server is required. Real-engine measurements are run
+separately:
 
 ```powershell
 cd backend
-.venv\Scripts\python.exe -m pytest
-.venv\Scripts\python.exe -m pytest tests\test_ocr_engine.py -v      # OCR engine (needs Tesseract)
+.venv\Scripts\python.exe scripts\accuracy_report.py
+.venv\Scripts\python.exe scripts\ac3_report.py
 ```
 
-The suite is self-contained: every test module boots the app against its own temp SQLite database
-(migrated with `alembic upgrade head`) and temp storage directory, and no live server is required.
-It pins the fake engines via environment variables, so the real engines never run inside `pytest`;
-the real pipeline is measured by `scripts/accuracy_report.py` (see *Engine selection* above).
-Current status: **142 tests, 0 failures** (Phase 2). Contract tests: `npm run test` in `contracts\`.
+## Architecture
 
-> **Docker is not supported yet.** `docker-compose.yml` is a Phase 5 deliverable; until then use the
-> local setup above (there is no supported container workflow, and the compose file's images/ports
-> are not maintained).
+```text
+PropChain/
+├── backend/                 FastAPI API, SQLAlchemy models, Alembic migrations
+│   ├── app/services/        OCR, classification, extraction, matrix, ownership, rules, verdict
+│   ├── app/routers/         auth, properties, documents, analysis, blockchain, reports, admin
+│   ├── tests/               backend test suite
+│   └── artifacts/           AC-2 / AC-3 measurement reports
+├── frontend/                Next.js 16 + React 19 + Tailwind
+│   └── src/app/             landing, auth, dashboard, property workspace
+├── contracts/               DocumentRegistry.sol + Hardhat toolchain
+├── docs/                    screenshots, synthetic samples, icon assets
+└── scripts/                 setup.ps1, start-app.ps1, create-shortcut.ps1
+```
+
+Key backend boundaries:
+
+- `backend/app/services/analysis_engine.py` orchestrates the pipeline and persists a run.
+- `backend/app/services/verdict.py` maps findings to the fixed verdict vocabulary and the
+  *not checked* list.
+- `backend/app/routers/analysis.py` exposes the latest run, findings, ownership chain, and verdict.
+- `backend/app/services/blockchain.py` (or the router-level adapter) registers SHA-256 hashes;
+  documents never leave local storage.
+
+## API
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| POST | `/auth/register` | Create account |
+| POST | `/auth/login` | Get JWT token |
+| POST | `/properties` | Create property |
+| GET | `/properties` | List properties |
+| GET | `/properties/{id}` | Property workspace data |
+| POST | `/documents/upload/{property_id}` | Upload a document and compute its SHA-256 |
+| POST | `/analysis/run/{property_id}` | Run the analysis pipeline |
+| GET | `/analysis/{property_id}/findings` | Latest findings |
+| GET | `/analysis/{property_id}/ownership` | Latest ownership chain |
+| GET | `/analysis/{property_id}/verdict` | Verdict, reasons, and not-checked list |
+| POST | `/blockchain/register/{document_id}` | Register a document hash |
+| POST | `/blockchain/verify/{document_id}` | Verify document integrity |
+| GET | `/reports/{property_id}/pdf` | Download the PDF report |
+| GET | `/health` | API and active-engine health |
+
+## Responsible AI
+
+- Findings are **screening indicators**, not legal determinations. Final title verification requires
+  a qualified professional and the original government records.
+- Checks that were not performed are reported as **not checked** — they are never silently treated as
+  passing.
+- Every finding cites the documents it came from; uncertain ownership links are marked as gaps.
+- Documents remain off-chain. Only SHA-256 hashes are registered, and the default chain adapter is a
+  mock.
+- The accuracy harnesses use synthetic, co-designed fixtures. They are evidence that the pipeline
+  works end to end, not a claim of general legal accuracy.
+- This is an academic prototype; do not use it as the sole basis for a property transaction.
+
+## Documentation
+
+- [Project specifications](PROPCHAIN-AI%20Specs.pdf)
+- [Synopsis](PropChain-AI_Synopsis.pdf)
+- [Phase 3 AC-3 report](backend/artifacts/phase3_ac3.md)
+- [Phase 2 AC-2 report](backend/artifacts/phase2_accuracy.md)
+- [Synthetic sample documents](docs/samples/README.md)
+- [Current review deck](PropChain-AI_Review-IV.pptx)
+
+## Docker
+
+The checked-in `docker-compose.yml` is a **legacy Phase 5 placeholder** and is not supported yet
+(Docker is not installed on the review machine; the images/ports are not maintained). Use the local
+Python/Node path above. A supported container workflow is future work.
+
+## License and attribution
+
+Academic project by **Vishal Sahani**. No open-source license has been added; treat the repository as
+an academic prototype unless a license is provided.

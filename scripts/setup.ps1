@@ -34,6 +34,8 @@ $ContractsDir = Join-Path $RepoRoot 'contracts'
 $VenvDir = Join-Path $BackendDir '.venv'
 $VenvPython = Join-Path $VenvDir 'Scripts\python.exe'
 $Requirements = Join-Path $BackendDir 'requirements.txt'
+$EnvExample = Join-Path $RepoRoot '.env.example'
+$EnvFile = Join-Path $BackendDir '.env'
 
 function Write-Step([string]$Message) {
     Write-Host "==> $Message" -ForegroundColor Cyan
@@ -68,8 +70,15 @@ Assert-Command 'npm' 'npm ships with Node.js - reinstall Node.js LTS.'
 $nodeVersion = (& node --version).Trim()
 Write-Ok "uv $((& uv --version).Trim().Split(' ')[1])  |  node $nodeVersion"
 
-if (-not (Test-Path (Join-Path $RepoRoot '.env.example'))) {
+if (-not (Test-Path $EnvExample)) {
     Write-Warning '.env.example is missing - the repository may be incomplete.'
+}
+elseif (-not (Test-Path $EnvFile)) {
+    Copy-Item $EnvExample $EnvFile
+    Write-Ok 'Created backend\.env from .env.example'
+}
+else {
+    Write-Ok 'backend\.env already exists - leaving it untouched'
 }
 
 # --- 2. backend venv + dependencies ----------------------------------------
@@ -145,32 +154,39 @@ Write-Host ''
 Write-Host 'Setup finished. Next steps (nothing was started for you):' -ForegroundColor White
 Write-Host @"
 
-  1. Environment file (project root):
-       Copy-Item .env.example .env
-     Adjust SECRET_KEY (any long random string is fine locally) and the OCR paths if needed.
+  1. Backend environment:
+       backend\.env was created from .env.example if it was missing.
+     Set SECRET_KEY to any long random string for local use. The real OCR and
+     analysis engines are optional; see README.md -> Engine selection.
 
-  2. Tesseract OCR (optional; needed only for scanned/complex documents).
-     Get micromamba from https://mamba.readthedocs.io/ if you do not have it yet, then:
-       micromamba create -y -p C:\Users\visha\tools\tessenv -c conda-forge tesseract
-     Point .env at the created env (already the default in .env.example):
-       TESSERACT_CMD=C:\Users\visha\tools\tessenv\Library\bin\tesseract.exe
-       TESSDATA_PREFIX=C:\Users\visha\tools\tessenv\share\tessdata
+  2. Tesseract OCR (optional; needed only for scanned/complex documents):
+       winget install UB-Mannheim.TesseractOCR
+     Or install it from https://github.com/UB-Mannheim/tesseract/wiki.
+     If the binary is not on PATH, set TESSERACT_CMD and TESSDATA_PREFIX in
+     backend\.env (example paths are in .env.example).
 
-  3. Run the backend (terminal 1):
+  3. One-click development launch:
+       powershell -ExecutionPolicy Bypass -File scripts\start-app.ps1
+     Starts the backend + frontend, waits for both, and opens the app.
+
+  4. Manual launch (two terminals):
        cd backend
+       .venv\Scripts\python.exe -m alembic upgrade head
        .venv\Scripts\python.exe -m uvicorn app.main:app --reload
-     API docs: http://localhost:8000/docs
-
-  4. Run the frontend (terminal 2):
+       # terminal 2
        cd frontend
        npm run dev
-     App: http://localhost:3000
+     API docs: http://localhost:8000/docs
+     App:      http://localhost:3000
 
-  5. Run the backend test suite (uses temp SQLite DBs, no server needed):
+  5. Optional desktop shortcut:
+       powershell -ExecutionPolicy Bypass -File scripts\create-shortcut.ps1
+
+  6. Run the backend test suite (uses temp SQLite DBs, no server needed):
        cd backend
        .venv\Scripts\python.exe -m pytest
 
-  6. Optional local EVM chain for the contracts module (two terminals):
+  7. Optional local EVM chain for the contracts module (two terminals):
        cd contracts
        npm run node           # terminal A
        npm run deploy:local   # terminal B
