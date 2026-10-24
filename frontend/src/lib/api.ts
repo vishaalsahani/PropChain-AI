@@ -13,6 +13,21 @@ export function clearToken() {
   localStorage.removeItem("propchain_token");
 }
 
+export function getUserEmail(): string | null {
+  const token = getToken();
+  if (!token) return null;
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+    const claims = JSON.parse(atob(padded));
+    return typeof claims.sub === "string" ? claims.sub : null;
+  } catch {
+    return null;
+  }
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
   const headers = new Headers(options.headers || {});
@@ -23,7 +38,14 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   const res = await fetch(`${API_URL}${path}`, { ...options, headers });
   if (!res.ok) {
-    const detail = await res.text();
+    const raw = await res.text();
+    let detail = raw;
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed.detail === "string") detail = parsed.detail;
+    } catch {
+      // Not JSON — use the raw body as the message.
+    }
     throw new Error(detail || `Request failed: ${res.status}`);
   }
   if (res.headers.get("content-type")?.includes("application/json")) {
