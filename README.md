@@ -73,7 +73,7 @@ not generalisation to unseen legal wording. The independent acceptance set is la
 From a PowerShell prompt:
 
 ```powershell
-git clone https://github.com/vishal-sahani/PropChain-AI.git
+git clone https://github.com/vishaalsahani/PropChain-AI.git
 cd PropChain-AI
 
 powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
