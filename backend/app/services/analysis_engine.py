@@ -309,9 +309,12 @@ def run_property_analysis(db: Session, property_obj: Property) -> Property:
         property_obj.risk_score = 10.0
 
     run.risk_score = property_obj.risk_score
+    finding_count = len(drafts)
+    node_count = len(ownership_drafts)
     run.summary = (
-        f"Verdict {verdict.verdict.replace('_', ' ')}: {len(drafts)} findings and "
-        f"{len(ownership_drafts)} ownership nodes."
+        f"Verdict {verdict.verdict.replace('_', ' ')}: "
+        f"{finding_count} finding{'s' if finding_count != 1 else ''}, "
+        f"{node_count} ownership node{'s' if node_count != 1 else ''}."
     )
     property_obj.status = _property_status(verdict.verdict)
     db.commit()

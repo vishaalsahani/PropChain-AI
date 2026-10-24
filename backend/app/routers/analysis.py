@@ -53,7 +53,10 @@ def run_analysis(
         findings=[FindingOut.model_validate(f) for f in findings],
         ownership_chain=[OwnershipNodeOut.model_validate(n) for n in nodes],
         risk_score=prop.risk_score or 0,
-        summary=f"Analysis completed with {len(findings)} findings and {len(nodes)} ownership nodes.",
+        summary=(run.summary if run and run.summary else
+                 f"Analysis completed with {len(findings)} "
+                 f"finding{'s' if len(findings) != 1 else ''} and {len(nodes)} "
+                 f"ownership node{'s' if len(nodes) != 1 else ''}."),
         verdict=run.verdict.value if run and run.verdict else None,
         verdict_reasons=verdict_reasons or None,
     )
