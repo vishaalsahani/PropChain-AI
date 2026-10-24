@@ -1,5 +1,7 @@
 # PropChain-AI
 
+[![CI](https://github.com/vishaalsahani/PropChain-AI/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/vishaalsahani/PropChain-AI/actions/workflows/ci.yml)
+
 **AI-assisted property due diligence for Maharashtra.** Upload a property's documents, get a
 document-by-document cross-check, an evidence-based ownership chain, and a screening verdict with
 its reasons — and an explicit list of what was **not** checked.
