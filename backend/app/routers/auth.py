@@ -3,13 +3,19 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import client_ip
+from app.dependencies import client_ip, get_current_user
 from app.models import User, UserRole
 from app.schemas import Token, UserCreate, UserOut
 from app.services.audit import record
 from app.utils.security import create_access_token, hash_password, verify_password
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+@router.get("/me", response_model=UserOut)
+def me(current_user: User = Depends(get_current_user)):
+    """Return the authenticated user; the UI uses the role to gate edit controls."""
+    return current_user
 
 # Public self-registration may only mint these roles. ``reviewer``/``admin`` are
 # provisioned by an administrator, so POST /auth/register can not escalate.

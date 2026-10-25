@@ -151,6 +151,14 @@ class AnalysisRun(Base):
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    # Phase 6: human review is attached to the run, not to the mutable property.
+    review_status: Mapped[str] = mapped_column(
+        String(32), default="pending", index=True
+    )
+    review_verdict: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    reviewed_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    review_note: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     property: Mapped["Property"] = relationship(back_populates="analysis_runs")
     risk_flags: Mapped[list["RiskFlag"]] = relationship(back_populates="analysis_run")
@@ -175,8 +183,16 @@ class RiskFlag(Base):
     evidence_refs: Mapped[dict | None] = mapped_column(JsonType, nullable=True)  # project-defined: doc/page/snippet
     rule_ref: Mapped[str | None] = mapped_column(String(100), nullable=True)  # legacy string, kept for the API
     rule_id: Mapped[int | None] = mapped_column(ForeignKey("legal_rules.id"), nullable=True)
+    # Phase 4: the catalogue version this finding was evaluated against, so a
+    # later edit to the rule cannot rewrite the history of an old run.
+    rule_version: Mapped[int | None] = mapped_column(Integer, nullable=True)
     recommended_action: Mapped[str | None] = mapped_column(Text, nullable=True)  # project-defined
-    status: Mapped[str] = mapped_column(String(50), default="open")  # reviewer workflow lands in Phase 6
+    # Phase 6: reviewer state. Values: open / confirmed / dismissed /
+    # needs_evidence; the audit trail keeps the full transition history.
+    status: Mapped[str] = mapped_column(String(50), default="open", index=True)
+    reviewed_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    review_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     property: Mapped["Property"] = relationship(back_populates="risk_flags")
@@ -269,13 +285,15 @@ class LegalRule(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     category: Mapped[RiskCategory | None] = mapped_column(db_enum(RiskCategory), nullable=True)
     severity: Mapped[Severity] = mapped_column(db_enum(Severity), default=Severity.medium)
+    confidence: Mapped[float] = mapped_column(Float, default=0.8)  # Phase 4: risk-engine confidence
     conditions: Mapped[dict | None] = mapped_column(JsonType, nullable=True)
-    evidence_required: Mapped[dict | None] = mapped_column(JsonType, nullable=True)
+    evidence_required: Mapped[dict | list | None] = mapped_column(JsonType, nullable=True)
     recommended_action: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     effective_from: Mapped[date | None] = mapped_column(Date, nullable=True)
     effective_to: Mapped[date | None] = mapped_column(Date, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    current_version: Mapped[int] = mapped_column(Integer, default=1)  # Phase 4: latest snapshot
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     versions: Mapped[list["LegalRuleVersion"]] = relationship(back_populates="rule")

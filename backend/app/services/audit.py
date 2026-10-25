@@ -9,7 +9,8 @@ Actions currently in use (keep this list in sync with the routers):
 
 ``user.registered``, ``user.login``, ``user.login_failed``, ``property.created``,
 ``document.uploaded``, ``analysis.run_completed``, ``blockchain.registered``,
-``report.generated``.
+``report.generated``, ``rule.created``, ``rule.updated``, ``rule.rolled_back``,
+``rule.pack_reset``.
 """
 
 from typing import Any

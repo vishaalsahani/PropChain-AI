@@ -1,4 +1,4 @@
-"""Analysis pipeline orchestration (Phase 2; verdict since Phase 3).
+"""Analysis pipeline orchestration (Phase 2; verdict since Phase 3; DB rules since Phase 4).
 
 The engine contains no business logic: OCR, classification, field extraction,
 cross-document validation, ownership-chain building, rule evaluation and the
@@ -11,10 +11,10 @@ FR-8 verdict are delegated to the swappable engines in ``app.services.registry``
   * converts returned FlagDraft/OwnershipDraft objects into ORM rows linked to
     that run.
 
-Decision D10: risk flags and ownership records reflect the latest run only
-(previous rows are replaced on re-run), while AnalysisRun rows are retained as
-run history — this keeps the pre-Phase-1 API behaviour identical. Row-level
-history/versioning is a Phase 6 (reviewer workflow) concern.
+Decision D10 (revised in Phase 6): every run owns its risk flags and ownership
+records. Re-running the analysis creates a new run and leaves earlier rows
+attached to their original run, so a reviewer's decision on an old finding is
+never silently rewritten. The API reads the latest run by default.
 
 Engine selection lives in ``backend/.env`` (see ``app.config``): the fake
 engines keep a fresh machine bootable, the real OCR/NLP engines are opt-in per
@@ -33,6 +33,7 @@ from app.models import (
     DocumentStatus,
     ExtractedField,
     FieldValueStatus,
+    LegalRule,
     OwnershipRecord,
     Property,
     PropertyStatus,
@@ -49,6 +50,8 @@ from app.services.registry import (
     get_ownership_builder,
     get_rule_engine,
 )
+from app.services.rule_store import DatabaseRuleEngine, load_rule_pack
+from app.services.rules_mh import MaharashtraRuleEngine
 from app.services.verdict import derive_verdict
 
 #: Pages inside ``ocr_text`` are separated with a form feed (the frozen
@@ -66,11 +69,13 @@ CATEGORY_ALIASES = {
 }
 
 
-def pipeline_engine_version() -> str:
+def pipeline_engine_version(rule_engine_tag: str | None = None) -> str:
     """Run-level engine tag composed from the configured components.
 
     Fits ``AnalysisRun.engine_version`` (String(120), widened in migration 0004);
     per-field provenance is stored on ``ExtractedField.extractor_version``.
+    ``rule_engine_tag`` lets the caller record the actual DB catalogue signature
+    used by the run instead of the registry default.
     """
     parts = [
         get_ocr_service().engine_version,
@@ -78,9 +83,9 @@ def pipeline_engine_version() -> str:
         get_nlp_extractor().engine_version,
         get_cross_validator().engine_version,
         get_ownership_builder().engine_version,
-        get_rule_engine().engine_version,
+        rule_engine_tag or get_rule_engine().engine_version,
     ]
-    return ("phase-3|" + "|".join(parts))[:120]
+    return ("phase-4|" + "|".join(parts))[:120]
 
 
 def run_document_pipeline(db: Session, document: Document) -> Document:
@@ -223,46 +228,53 @@ def run_property_analysis(db: Session, property_obj: Property) -> Property:
 
     ownership_drafts = get_ownership_builder().build(document_meta)
     drafts = get_cross_validator().validate(extracted, document_meta)
-    drafts += get_rule_engine().evaluate(
-        {
-            "state": property_obj.state,
-            "district": property_obj.district,
-            "taluka": property_obj.taluka,
-            "village": property_obj.village,
-            "survey_number": property_obj.survey_number,
-            "gat_number": property_obj.gat_number,
-            "cts_number": property_obj.cts_number,
-            "area_sqft": property_obj.area_sqft,
-            "area_unit": property_obj.area_unit.value,
-            # Phase 3 enrichment: the rule pack evaluates the chain it did not build.
-            "documents": profile_documents,
-            "ownership": [
-                {
-                    "from_party": node.from_party,
-                    "to_party": node.to_party,
-                    "transfer_type": node.transfer_type,
-                    "transfer_date": node.transfer_date,
-                    "document_ref": node.document_ref,
-                    "sequence": node.sequence,
-                    "gap_flag": node.gap_flag,
-                }
-                for node in ownership_drafts
-            ],
-        },
-        extracted_values,
-    )
+    property_profile = {
+        "state": property_obj.state,
+        "district": property_obj.district,
+        "taluka": property_obj.taluka,
+        "village": property_obj.village,
+        "survey_number": property_obj.survey_number,
+        "gat_number": property_obj.gat_number,
+        "cts_number": property_obj.cts_number,
+        "area_sqft": property_obj.area_sqft,
+        "area_unit": property_obj.area_unit.value,
+        # Phase 3 enrichment: the rule pack evaluates the chain it did not build.
+        "documents": profile_documents,
+        "ownership": [
+            {
+                "from_party": node.from_party,
+                "to_party": node.to_party,
+                "transfer_type": node.transfer_type,
+                "transfer_date": node.transfer_date,
+                "document_ref": node.document_ref,
+                "sequence": node.sequence,
+                "gap_flag": node.gap_flag,
+            }
+            for node in ownership_drafts
+        ],
+    }
+
+    # Phase 4: when the real Maharashtra engine is selected, prefer the active
+    # database catalogue. An empty table (fresh install before 0005, or a
+    # non-Maharashtra jurisdiction) falls back to the code-level v1 pack.
+    rule_engine = get_rule_engine()
+    rule_engine_tag = getattr(rule_engine, "engine_version", "unknown")
+    if isinstance(rule_engine, MaharashtraRuleEngine):
+        loaded_pack = load_rule_pack(db, property_obj.state or "Maharashtra")
+        if loaded_pack.total_count:
+            rule_engine = DatabaseRuleEngine(loaded_pack)
+            rule_engine_tag = rule_engine.engine_version
+    drafts += rule_engine.evaluate(property_profile, extracted_values)
 
     verdict = derive_verdict(drafts, ownership_drafts, profile_documents)
 
-    # D10: the latest run owns the rows (AnalysisRun history is retained).
-    db.query(RiskFlag).filter(RiskFlag.property_id == property_obj.id).delete()
-    db.query(OwnershipRecord).filter(OwnershipRecord.property_id == property_obj.id).delete()
-
+    # Phase 6: do not delete the previous run's rows. Each run is an immutable
+    # slice of evidence; readers select the latest run explicitly.
     now = datetime.now(timezone.utc)
     run = AnalysisRun(
         property_id=property_obj.id,
         status=AnalysisRunStatus.completed,
-        engine_version=pipeline_engine_version(),
+        engine_version=pipeline_engine_version(rule_engine_tag=rule_engine_tag),
         verdict=Verdict(verdict.verdict),
         verdict_reasons=verdict.to_dict(),
         started_at=now,
@@ -271,7 +283,12 @@ def run_property_analysis(db: Session, property_obj: Property) -> Property:
     db.add(run)
     db.flush()  # assign run.id for the rows below
 
+    # Phase 4 traceability: link every finding to the catalogue row/version that
+    # produced it. Cross-validator findings whose ref is not in the legal
+    # catalogue keep rule_id NULL and remain traceable by rule_ref.
+    catalogue = {rule.rule_code: rule for rule in db.query(LegalRule).all()}
     for draft in drafts:
+        linked_rule = catalogue.get(draft.rule_ref) if draft.rule_ref else None
         db.add(
             RiskFlag(
                 property_id=property_obj.id,
@@ -283,6 +300,11 @@ def run_property_analysis(db: Session, property_obj: Property) -> Property:
                 confidence=draft.confidence,
                 evidence=draft.evidence,
                 rule_ref=draft.rule_ref,
+                rule_id=draft.rule_id or (linked_rule.id if linked_rule else None),
+                rule_version=(
+                    draft.rule_version
+                    or (int(linked_rule.current_version or 1) if linked_rule else None)
+                ),
                 recommended_action=draft.recommended_action,
             )
         )

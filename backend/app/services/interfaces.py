@@ -71,6 +71,9 @@ class FlagDraft:
     evidence: str | None = None
     rule_ref: str | None = None
     recommended_action: str | None = None
+    # Phase 4: link a finding to the versioned catalogue row that produced it.
+    rule_id: int | None = None
+    rule_version: int | None = None
 
 
 @dataclass

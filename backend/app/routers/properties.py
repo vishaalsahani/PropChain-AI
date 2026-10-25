@@ -5,6 +5,7 @@ from app.database import get_db
 from app.dependencies import client_ip, get_current_user
 from app.models import Property, User
 from app.schemas import PropertyCreate, PropertyOut
+from app.services.access import is_reviewer, property_for_read
 from app.services.audit import record
 
 router = APIRouter(prefix="/properties", tags=["properties"])
@@ -35,12 +36,12 @@ def create_property(
 
 @router.get("", response_model=list[PropertyOut])
 def list_properties(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return db.query(Property).filter(Property.owner_id == current_user.id).order_by(Property.created_at.desc()).all()
+    query = db.query(Property)
+    if not is_reviewer(current_user):
+        query = query.filter(Property.owner_id == current_user.id)
+    return query.order_by(Property.created_at.desc()).all()
 
 
 @router.get("/{property_id}", response_model=PropertyOut)
 def get_property(property_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    prop = db.query(Property).filter(Property.id == property_id, Property.owner_id == current_user.id).first()
-    if not prop:
-        raise HTTPException(status_code=404, detail="Property not found")
-    return prop
+    return property_for_read(db, current_user, property_id)

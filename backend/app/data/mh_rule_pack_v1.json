@@ -1,0 +1,304 @@
+{
+  "pack_code": "mh-v1",
+  "jurisdiction": "Maharashtra",
+  "name": "Maharashtra due-diligence screening pack",
+  "description": "Evidence-based screening rules for Maharashtra property files. Findings are indicators for a reviewer, not legal determinations.",
+  "rules": [
+    {
+      "rule_code": "MH-DOC-001",
+      "title": "No processed documents",
+      "description": "Upload and process property documents before due diligence.",
+      "category": "missing-document",
+      "severity": "medium",
+      "confidence": 1.0,
+      "law_name": null,
+      "section": null,
+      "conditions": {
+        "type": "no_documents",
+        "short_circuit": true
+      },
+      "evidence_required": [
+        "At least one completed document extraction"
+      ],
+      "recommended_action": "Upload at least the 7/12 extract and the latest transfer deed.",
+      "source_url": null,
+      "is_active": true
+    },
+    {
+      "rule_code": "MH-LAND-712",
+      "title": "7/12 extract not found",
+      "description": "Maharashtra land due diligence typically requires a 7/12 extract (record of rights) for the latest position.",
+      "category": "missing-document",
+      "severity": "high",
+      "confidence": 0.9,
+      "law_name": "Maharashtra Land Revenue Code, 1966",
+      "section": "Record of Rights (7/12)",
+      "conditions": {
+        "type": "missing_doc_type",
+        "doc_type": "7_12_extract",
+        "evidence": "No document classified as 7/12 among the uploads"
+      },
+      "evidence_required": [
+        "Current 7/12 extract from Mahabhulekh"
+      ],
+      "recommended_action": "Download the current 7/12 extract from Mahabhulekh and upload it.",
+      "source_url": null,
+      "is_active": true
+    },
+    {
+      "rule_code": "MH-IDENT-001",
+      "title": "Survey/Gat number missing in property profile",
+      "description": "The property profile carries no survey, Gat or CTS number, so documents cannot be tied to a land record.",
+      "category": "identity",
+      "severity": "medium",
+      "confidence": 0.85,
+      "law_name": "Maharashtra Land Revenue Code, 1966",
+      "section": "Survey/Gat/CTS identifiers",
+      "conditions": {
+        "type": "profile_identifier_missing",
+        "state": "Maharashtra",
+        "fields": [
+          "survey_number",
+          "gat_number",
+          "cts_number"
+        ]
+      },
+      "evidence_required": [
+        "Survey, Gat or CTS number in the property profile"
+      ],
+      "recommended_action": "Add the survey/Gat number from the 7/12 extract to the profile.",
+      "source_url": null,
+      "is_active": true
+    },
+    {
+      "rule_code": "MH-IDENT-002",
+      "title": "Profile {field} differs from documents",
+      "description": "The identifier in the property profile does not match the value extracted from the uploaded documents.",
+      "category": "identity",
+      "severity": "high",
+      "confidence": 0.85,
+      "law_name": "Maharashtra Land Revenue Code, 1966",
+      "section": "Survey/Gat/CTS identifiers",
+      "conditions": {
+        "type": "identifier_mismatch",
+        "fields": [
+          "survey_number",
+          "gat_number",
+          "cts_number"
+        ]
+      },
+      "evidence_required": [
+        "Consistent survey/Gat/CTS number across the profile and every document"
+      ],
+      "recommended_action": "Confirm which identifier is correct against the 7/12 extract and correct the profile or re-upload the document.",
+      "source_url": null,
+      "is_active": true
+    },
+    {
+      "rule_code": "MH-CHAIN-001",
+      "title": "Ownership chain has an unevidenced step",
+      "description": "At least one transfer in the ownership chain cannot be linked to an uploaded document; the missing instrument must be produced before the chain can be treated as continuous.",
+      "category": "ownership",
+      "severity": "high",
+      "confidence": 0.8,
+      "law_name": "Transfer of Property Act, 1882",
+      "section": "Sale of immovable property (s. 54)",
+      "conditions": {
+        "type": "ownership_gap"
+      },
+      "evidence_required": [
+        "A registered instrument for every ownership step"
+      ],
+      "recommended_action": "Request the missing predecessor deed/mutation from the seller and upload it to close the chain.",
+      "source_url": null,
+      "is_active": true
+    },
+    {
+      "rule_code": "MH-CHAIN-002",
+      "title": "Only an agreement to sale is available",
+      "description": "An agreement to sale does not by itself convey title; no registered transfer (sale/gift/partition/mutation) was found.",
+      "category": "ownership",
+      "severity": "medium",
+      "confidence": 0.8,
+      "law_name": "Transfer of Property Act, 1882",
+      "section": "Sale of immovable property (s. 54)",
+      "conditions": {
+        "type": "agreement_only",
+        "registered_transfer_types": [
+          "sale",
+          "gift",
+          "partition",
+          "mutation"
+        ]
+      },
+      "evidence_required": [
+        "Executed and registered transfer instrument"
+      ],
+      "recommended_action": "Ask for the executed and registered sale deed that followed the agreement.",
+      "source_url": null,
+      "is_active": true
+    },
+    {
+      "rule_code": "MH-CHAIN-003",
+      "title": "No ownership evidence in the uploaded documents",
+      "description": "The uploads contain neither a transfer instrument nor a land record naming the holder, so no ownership chain could be built.",
+      "category": "ownership",
+      "severity": "medium",
+      "confidence": 0.9,
+      "law_name": "Transfer of Property Act, 1882",
+      "section": "Sale of immovable property (s. 54)",
+      "conditions": {
+        "type": "empty_ownership"
+      },
+      "evidence_required": [
+        "Transfer deed and/or current land record"
+      ],
+      "recommended_action": "Upload a transfer deed and/or the current 7/12 extract or property card.",
+      "source_url": null,
+      "is_active": true
+    },
+    {
+      "rule_code": "MH-ENC-001",
+      "title": "Mortgage deed among the documents",
+      "description": "A mortgage creates a charge against the property; it must be cleared or consented to at transfer.",
+      "category": "mortgage",
+      "severity": "high",
+      "confidence": 0.85,
+      "law_name": "Transfer of Property Act, 1882",
+      "section": "Mortgage (s. 58)",
+      "conditions": {
+        "type": "document_type_present",
+        "doc_types": [
+          "mortgage_deed"
+        ],
+        "label": "Mortgage deed"
+      },
+      "evidence_required": [
+        "Encumbrance certificate and bank release/no-dues letter"
+      ],
+      "recommended_action": "Verify the charge in the encumbrance certificate and obtain the bank's no-dues / release deed.",
+      "source_url": null,
+      "is_active": true
+    },
+    {
+      "rule_code": "MH-SUCC-001",
+      "title": "Succession document requires verification",
+      "description": "A will or partition introduces succession-derived ownership; probate/partition formalities and all legal heirs must be verified.",
+      "category": "succession",
+      "severity": "medium",
+      "confidence": 0.8,
+      "law_name": "Indian Succession Act, 1925",
+      "section": "Wills and succession",
+      "conditions": {
+        "type": "document_type_present",
+        "doc_types": [
+          "will",
+          "partition_deed"
+        ],
+        "label": "Succession-related documents"
+      },
+      "evidence_required": [
+        "Probate/partition deed and the legal-heir chain"
+      ],
+      "recommended_action": "Obtain the probate/partition deed and confirm the legal-heir chain.",
+      "source_url": null,
+      "is_active": true
+    },
+    {
+      "rule_code": "MH-LIT-001",
+      "title": "Court document among the documents",
+      "description": "A filed document suggests pending or past proceedings touching the property; the current status must be checked.",
+      "category": "litigation",
+      "severity": "high",
+      "confidence": 0.85,
+      "law_name": "Code of Civil Procedure, 1908",
+      "section": "Pending proceedings",
+      "conditions": {
+        "type": "document_type_present",
+        "doc_types": [
+          "court_document"
+        ],
+        "label": "Court document"
+      },
+      "evidence_required": [
+        "Certified order and current court case status"
+      ],
+      "recommended_action": "Search the court case status and obtain a certified copy of the order.",
+      "source_url": null,
+      "is_active": true
+    },
+    {
+      "rule_code": "MH-AREA-001",
+      "title": "Document area differs from the property profile",
+      "description": "At least one document deviates by more than 5% from the area recorded in the property profile.",
+      "category": "area",
+      "severity": "medium",
+      "confidence": 0.75,
+      "law_name": "Maharashtra Land Revenue Code, 1966",
+      "section": "Area records",
+      "conditions": {
+        "type": "area_deviation",
+        "tolerance": 0.05
+      },
+      "evidence_required": [
+        "Area stated in the 7/12 extract and the transfer deed"
+      ],
+      "recommended_action": "Re-check the area against the 7/12 extract and re-measure if needed.",
+      "source_url": null,
+      "is_active": true
+    },
+    {
+      "rule_code": "MH-INTEGRITY-001",
+      "title": "Registered hash does not match the file",
+      "description": "One or more documents changed after their hash was recorded: the on-chain record and the file no longer agree.",
+      "category": "document-integrity",
+      "severity": "critical",
+      "confidence": 0.95,
+      "law_name": "Bharatiya Sakshya Adhiniyam, 2023",
+      "section": "Electronic records",
+      "conditions": {
+        "type": "hash_mismatch"
+      },
+      "evidence_required": [
+        "SHA-256 fingerprint matching the registered on-chain record"
+      ],
+      "recommended_action": "Re-obtain the document from the source; treat the changed file as untrusted.",
+      "source_url": null,
+      "is_active": true
+    },
+    {
+      "rule_code": "CONSISTENCY-SURVEY-001",
+      "title": "Survey number mismatch",
+      "description": "Extracted survey numbers differ across uploaded documents.",
+      "category": "identity",
+      "severity": "high",
+      "confidence": 0.82,
+      "law_name": null,
+      "section": null,
+      "conditions": null,
+      "evidence_required": [
+        "One consistent survey number across the document set"
+      ],
+      "recommended_action": "Compare the survey number in each document and resolve the difference before relying on the set.",
+      "source_url": null,
+      "is_active": true
+    },
+    {
+      "rule_code": "CONSISTENCY-AREA-001",
+      "title": "Area discrepancy detected",
+      "description": "Document area values do not match.",
+      "category": "area",
+      "severity": "medium",
+      "confidence": 0.75,
+      "law_name": null,
+      "section": null,
+      "conditions": null,
+      "evidence_required": [
+        "One consistent area across the document set"
+      ],
+      "recommended_action": "Compare the area in each document and resolve the difference before relying on the set.",
+      "source_url": null,
+      "is_active": true
+    }
+  ]
+}

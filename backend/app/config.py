@@ -8,8 +8,17 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24
     storage_path: str = "./storage"
+    # Phase 5: the mock keeps a fresh checkout bootable. Real anchoring needs a
+    # deployed DocumentRegistry plus a funded signer; the private key is read
+    # from the environment only and is never written to logs or the database.
     blockchain_rpc_url: str = "http://127.0.0.1:8545"
     blockchain_mock_mode: bool = True
+    blockchain_network: str = "hardhat"
+    blockchain_chain_id: int | None = None
+    blockchain_contract_address: str | None = None
+    blockchain_private_key: str | None = None
+    blockchain_gas_limit: int = 500_000
+    blockchain_tx_timeout: int = 120
     cors_origins: list[str] = ["http://localhost:3000"]
 
     # Phase 2 — document intelligence. "fake" keeps a fresh machine bootable

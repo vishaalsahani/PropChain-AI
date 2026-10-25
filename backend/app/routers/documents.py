@@ -10,6 +10,7 @@ from app.database import get_db
 from app.dependencies import client_ip, get_current_user
 from app.models import Document, Property, User
 from app.schemas import DocumentOut
+from app.services.access import property_for_read
 from app.services.analysis_engine import run_document_pipeline
 from app.services.audit import record
 from app.utils.hashing import sha256_file
@@ -118,24 +119,23 @@ def list_documents(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    prop = db.query(Property).filter(Property.id == property_id, Property.owner_id == current_user.id).first()
-    if not prop:
-        raise HTTPException(status_code=404, detail="Property not found")
-
+    property_for_read(db, current_user, property_id)
     return db.query(Document).filter(Document.property_id == property_id).order_by(Document.created_at.desc()).all()
 
 
 @router.get("/{document_id}", response_model=DocumentOut)
 def get_document(document_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    document = db.query(Document).join(Property).filter(Document.id == document_id, Property.owner_id == current_user.id).first()
+    document = db.query(Document).filter(Document.id == document_id).first()
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
+    property_for_read(db, current_user, document.property_id)
     return document
 
 
 @router.get("/{document_id}/extracted")
 def get_extracted_data(document_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    document = db.query(Document).join(Property).filter(Document.id == document_id, Property.owner_id == current_user.id).first()
+    document = db.query(Document).filter(Document.id == document_id).first()
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
+    property_for_read(db, current_user, document.property_id)
     return json.loads(document.extracted_data) if document.extracted_data else {}
