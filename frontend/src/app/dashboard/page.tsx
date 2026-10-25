@@ -93,317 +93,352 @@ export default function DashboardPage() {
     return { analyzed, review, flagged, average, scored: scored.length };
   }, [properties]);
 
+  const statCards = [
+    {
+      label: "Properties",
+      value: properties.length,
+      hint: `${stats.scored} with a risk score`,
+      icon: Layers,
+    },
+    {
+      label: "Analyzed",
+      value: stats.analyzed,
+      hint: "verdict recorded",
+      icon: ShieldCheck,
+    },
+    {
+      label: "Needs review",
+      value: stats.review,
+      hint: "open items to confirm",
+      icon: ShieldAlert,
+    },
+    {
+      label: "Flagged",
+      value: stats.flagged,
+      hint: stats.average === null ? "no scores yet" : `avg. risk ${stats.average}/100`,
+      icon: Flag,
+    },
+  ];
+
   return (
     <>
       <Navbar />
-      <main className="shell space-y-8 py-8 sm:py-10">
-        <section className="animate-fade-up relative overflow-hidden rounded-3xl bg-brand-950 p-7 text-white shadow-lift sm:p-10">
-          <div aria-hidden className="absolute inset-0 bg-grid-dark [background-size:32px_32px] opacity-70" />
-          <div
-            aria-hidden
-            className="absolute -right-24 -top-32 h-80 w-80 rounded-full bg-brand-500/25 blur-3xl"
-          />
-          <div
-            aria-hidden
-            className="absolute -bottom-28 left-1/3 h-64 w-64 rounded-full bg-brass-400/10 blur-3xl"
-          />
-          <div className="relative flex flex-col gap-7 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-brass-200/80">
-                <span className="h-px w-6 bg-brass-300/50" />
-                Portfolio overview
-              </p>
-              <h1 className="mt-4 max-w-xl font-display text-3xl font-medium leading-[1.1] text-white sm:text-[42px]">
-                Your due-diligence desk.
-              </h1>
-              <p className="mt-3 max-w-xl text-sm leading-relaxed text-brand-100/70">
-                Upload the deed set, let the pipeline cross-check it, and read a verdict with the
-                evidence behind it.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2.5">
-              <Link
-                href="/properties/new"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#fffdf8] px-4 py-2.5 text-sm font-semibold text-brand-950 shadow-lg transition hover:-translate-y-px hover:bg-white"
-              >
-                <Plus className="h-4 w-4" />
-                Add property
-              </Link>
-              <span className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.06] px-3.5 py-2.5 text-xs font-medium text-brand-100/80">
-                <ShieldCheck className="h-4 w-4 text-brass-200" />
-                Findings, not legal conclusions
-              </span>
-            </div>
-          </div>
-        </section>
-
-        {error && (
-          <div
-            role="alert"
-            className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700"
-          >
-            <p>{error}</p>
-            <button onClick={load} className="btn-secondary btn-sm border-rose-200 bg-white/70 text-rose-700">
-              Retry
-            </button>
-          </div>
-        )}
-
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {loading
-            ? Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="card flex items-center gap-4">
-                  <div className="skeleton h-11 w-11 rounded-xl" />
-                  <div className="flex-1 space-y-2">
-                    <div className="skeleton h-2.5 w-20" />
-                    <div className="skeleton h-6 w-12" />
-                  </div>
-                </div>
-              ))
-            : [
-                { label: "Properties", value: properties.length, hint: `${stats.scored} with a risk score`, icon: Layers, tone: "bg-brand-50 text-brand-700" },
-                { label: "Analyzed", value: stats.analyzed, hint: "verdict recorded", icon: ShieldCheck, tone: "bg-emerald-50 text-emerald-700" },
-                { label: "Needs review", value: stats.review, hint: "open items to confirm", icon: ShieldAlert, tone: "bg-amber-50 text-amber-700" },
-                { label: "Flagged", value: stats.flagged, hint: stats.average === null ? "no scores yet" : `avg. risk ${stats.average}/100`, icon: Flag, tone: "bg-rose-50 text-rose-700" },
-              ].map((stat, index) => (
-                <div
-                  key={stat.label}
-                  className="card animate-fade-up flex items-center gap-4 p-5"
-                  style={{ animationDelay: `${index * 60}ms` }}
-                >
-                  <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${stat.tone}`}>
-                    <stat.icon className="h-[18px] w-[18px]" />
-                  </span>
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                      {stat.label}
-                    </p>
-                    <p className="stat-value mt-0.5 text-[28px] leading-none">{stat.value}</p>
-                    <p className="mt-1 text-[11px] text-slate-400">{stat.hint}</p>
-                  </div>
-                </div>
-              ))}
-        </section>
-
-        <div className="grid gap-6 lg:grid-cols-3">
-          <section className="animate-fade-up animation-delay-100 space-y-4 lg:col-span-2">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <h2 className="text-[22px] font-medium">Your properties</h2>
-                <p className="mt-0.5 text-sm text-slate-500">
-                  Every uploaded file belongs to one property profile.
+      <main>
+        <section className="border-b border-ink bg-ink text-paper">
+          <div className="shell">
+            <div className="dp-section section-y-md">
+              <div className="dp-rail">
+                <p className="eyebrow text-quiet">Portfolio overview</p>
+                <p className="mt-5 max-w-[13rem] font-mono text-[10px] uppercase leading-relaxed tracking-[0.08em] text-quiet">
+                  Findings, not legal conclusions
                 </p>
               </div>
-              <span className="chip">
-                {properties.length} {properties.length === 1 ? "property" : "properties"}
-              </span>
-            </div>
 
-            {loading ? (
-              <div className="grid gap-4 sm:grid-cols-2">
-                {Array.from({ length: 4 }).map((_, index) => (
-                  <div key={index} className="card space-y-4">
-                    <div className="skeleton h-5 w-3/4" />
-                    <div className="skeleton h-3 w-1/2" />
-                    <div className="flex gap-2">
-                      <div className="skeleton h-6 w-20" />
-                      <div className="skeleton h-6 w-16" />
+              <div className="dp-body dp-body--inverted">
+                <h1 className="font-display text-[clamp(42px,6cqw,84px)] font-medium leading-[0.98] tracking-[-0.04em] text-paper">
+                  Your due-diligence desk.
+                </h1>
+                <p className="mt-4 max-w-[36em] text-[15px] leading-[1.55] text-quiet">
+                  Upload the deed set, let the pipeline cross-check it, and read a verdict with the
+                  evidence behind it.
+                </p>
+                <div className="mt-7 flex flex-wrap items-center gap-3">
+                  <Link href="/properties/new" className="btn btn-on-ink">
+                    <Plus className="h-4 w-4" />
+                    Add property
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="shell">
+          {error && (
+            <div
+              role="alert"
+              className="mt-8 flex flex-wrap items-center justify-between gap-3 border border-ink px-5 py-4 text-[13px] leading-relaxed text-ink"
+            >
+              <p>{error}</p>
+              <button onClick={load} className="btn btn-secondary btn-sm">
+                Retry
+              </button>
+            </div>
+          )}
+
+          <section className="mt-8 grid gap-px border border-quiet bg-quiet sm:grid-cols-2 xl:grid-cols-4">
+            {loading
+              ? Array.from({ length: 4 }).map((_, index) => (
+                  <div key={index} className="bg-paper p-5">
+                    <div className="skeleton h-3 w-24" />
+                    <div className="skeleton mt-4 h-12 w-20" />
+                    <div className="skeleton mt-3 h-3 w-32" />
+                  </div>
+                ))
+              : statCards.map((stat) => (
+                  <div key={stat.label} className="bg-paper p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-secondary">
+                        {stat.label}
+                      </p>
+                      <stat.icon className="h-4 w-4 text-ink" />
                     </div>
-                    <div className="skeleton h-1.5 w-full" />
+                    <p className="display-number mt-4">{stat.value}</p>
+                    <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.07em] text-secondary">
+                      {stat.hint}
+                    </p>
                   </div>
                 ))}
-              </div>
-            ) : properties.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-ink/15 bg-white/50 px-6 py-14 text-center">
-                <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-600/10">
-                  <Layers className="h-6 w-6" />
-                </span>
-                <h3 className="mt-5 text-xl font-medium">Start with a property file</h3>
-                <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-500">
-                  Create a profile with the village, survey number and area, then upload the deed set
-                  to run the first analysis.
-                </p>
-                <Link href="/properties/new" className="btn-primary mt-6">
-                  <Plus className="h-4 w-4" />
-                  Add a property
-                </Link>
-              </div>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
-                {properties.map((property, index) => {
-                  const status = propertyStatus(property.status);
-                  const risk = riskTone(property.risk_score);
-                  const location = locationOf(property);
-                  return (
-                    <Link
-                      key={property.id}
-                      href={`/properties/${property.id}`}
-                      className="group animate-fade-up relative flex flex-col overflow-hidden rounded-2xl border border-ink/[0.06] bg-white/80 shadow-soft backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lift"
-                      style={{ animationDelay: `${80 + index * 50}ms` }}
-                    >
-                      <span className={`h-1 w-full ${status.accent}`} />
-                      <div className="flex flex-1 flex-col p-5">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <h3 className="line-clamp-2 text-[17px] font-medium leading-snug transition group-hover:text-brand-800">
-                              {property.title}
-                            </h3>
-                            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500">
-                              <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                              {location || "Location not set"}
-                            </p>
-                          </div>
-                          <span className={`${status.badge} shrink-0`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
-                            {status.label}
-                          </span>
-                        </div>
-
-                        <div className="mt-4 flex flex-wrap gap-1.5">
-                          {property.survey_number && (
-                            <span className="chip">Survey {property.survey_number}</span>
-                          )}
-                          {property.gat_number && <span className="chip">Gat {property.gat_number}</span>}
-                          {property.area_sqft !== null && property.area_sqft !== undefined && (
-                            <span className="chip">
-                              <Ruler className="h-3 w-3 text-slate-400" />
-                              {formatArea(property.area_sqft)}
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="mt-auto pt-6">
-                          <div className="flex items-center justify-between text-[11px]">
-                            <span className="text-slate-400">Risk indicator</span>
-                            <span className={`font-semibold ${risk.text}`}>
-                              {property.risk_score === null ? "Not scored" : `${Math.round(property.risk_score)}/100`}
-                            </span>
-                          </div>
-                          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-ink/[0.06]">
-                            <div
-                              className={`h-full rounded-full ${risk.bar} transition-all duration-500`}
-                              style={{ width: `${Math.min(Math.max(property.risk_score ?? 0, 0), 100)}%` }}
-                            />
-                          </div>
-                          <div className="mt-3 flex items-center justify-between border-t border-ink/[0.06] pt-3 text-[11px] text-slate-400">
-                            <span>Created {formatDate(property.created_at)}</span>
-                            <span className="inline-flex items-center gap-1 font-semibold text-brand-700">
-                              Open file
-                              <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
           </section>
 
-          <aside className="animate-fade-up animation-delay-200 space-y-6">
-            <div className="card">
-              <div className="flex items-center justify-between">
-                <h2 className="flex items-center gap-2 text-base font-semibold">
-                  <Activity className="h-4 w-4 text-brand-700" />
-                  Analysis pipeline
-                </h2>
-                <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-700">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-                  Live
+          <section className="mt-14 border-t border-ink">
+            <div className="dp-section py-10">
+              <div className="dp-rail">
+                <h2 className="display-heading">Your properties</h2>
+                <p className="mt-4 max-w-[18rem] text-[13px] leading-relaxed text-secondary">
+                  Every uploaded file belongs to one property profile.
+                </p>
+                <span className="mt-5 inline-block border border-quiet px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.08em] text-secondary">
+                  {properties.length} {properties.length === 1 ? "property" : "properties"}
                 </span>
               </div>
-              <p className="mt-1 text-xs text-slate-400">Engines selected for this deployment.</p>
 
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                {(loading ? ENGINE_ORDER : ENGINE_ORDER.filter((key) => health[key])).map((key) => {
-                  const value = health[key];
-                  const isMock = value === "mock";
-                  return (
-                    <div
-                      key={key}
-                      className="rounded-xl border border-ink/[0.06] bg-white/60 px-3 py-2.5"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-                          {ENGINE_LABELS[key] ?? humanize(key)}
-                        </p>
-                        <span
-                          className={`h-1.5 w-1.5 shrink-0 rounded-full ${
-                            loading ? "bg-slate-300" : isMock ? "bg-amber-400" : "bg-emerald-500"
-                          }`}
-                        />
+              <div className="dp-body">
+                {loading ? (
+                  <div className="grid gap-px bg-quiet sm:grid-cols-2">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <div key={index} className="bg-paper p-5">
+                        <div className="skeleton h-5 w-3/4" />
+                        <div className="skeleton mt-3 h-3 w-1/2" />
+                        <div className="skeleton mt-5 h-6 w-2/3" />
+                        <div className="skeleton mt-6 h-2 w-full" />
                       </div>
-                      {loading ? (
-                        <div className="skeleton mt-1.5 h-3 w-16" />
-                      ) : (
-                        <p className="mt-0.5 truncate text-xs font-semibold text-ink">{humanize(value ?? "—")}</p>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="mt-4 flex items-center justify-between rounded-xl bg-brand-50/70 px-3 py-2.5 text-[11px] text-brand-800">
-                <span className="inline-flex items-center gap-1.5">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  Documents stay off-chain
-                </span>
-                <span className="font-mono text-[10px] text-brand-600">SHA-256</span>
-              </div>
-            </div>
-
-            <div className="card">
-              <h2 className="text-base font-semibold">How verdicts are read</h2>
-              <p className="mt-1 text-xs text-slate-400">
-                Project policy — findings are screening indicators.
-              </p>
-              <ul className="mt-4 space-y-3.5">
-                {[
-                  {
-                    icon: ShieldCheck,
-                    tone: "bg-emerald-50 text-emerald-700",
-                    title: "Verified",
-                    body: "No medium-or-higher findings and no ownership gaps.",
-                  },
-                  {
-                    icon: ShieldAlert,
-                    tone: "bg-amber-50 text-amber-700",
-                    title: "Needs review",
-                    body: "Only low/medium items, or no completed documents yet.",
-                  },
-                  {
-                    icon: Flag,
-                    tone: "bg-rose-50 text-rose-700",
-                    title: "Flagged",
-                    body: "A high/critical finding or any gap in the ownership chain.",
-                  },
-                ].map((item) => (
-                  <li key={item.title} className="flex gap-3">
-                    <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${item.tone}`}>
-                      <item.icon className="h-4 w-4" />
+                    ))}
+                  </div>
+                ) : properties.length === 0 ? (
+                  <div className="border border-quiet px-6 py-14 text-center">
+                    <span className="mx-auto grid h-12 w-12 place-items-center border border-ink text-ink">
+                      <Layers className="h-6 w-6" />
                     </span>
-                    <div>
-                      <p className="text-[13px] font-semibold text-ink">{item.title}</p>
-                      <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">{item.body}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-4 border-t border-ink/[0.06] pt-3 text-[11px] leading-relaxed text-slate-400">
-                Items that could not be checked (RERA, litigation history, encumbrance) are always
-                listed alongside the verdict.
-              </p>
-            </div>
-          </aside>
-        </div>
+                    <h3 className="mt-5 font-display text-[30px] leading-none">
+                      Start with a property file
+                    </h3>
+                    <p className="mx-auto mt-3 max-w-sm text-[13px] leading-relaxed text-secondary">
+                      Create a profile with the village, survey number and area, then upload the deed
+                      set to run the first analysis.
+                    </p>
+                    <Link href="/properties/new" className="btn btn-primary mt-6">
+                      <Plus className="h-4 w-4" />
+                      Add a property
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="grid gap-px bg-quiet sm:grid-cols-2">
+                    {properties.map((property) => {
+                      const status = propertyStatus(property.status);
+                      const risk = riskTone(property.risk_score);
+                      const location = locationOf(property);
+                      return (
+                        <Link
+                          key={property.id}
+                          href={`/properties/${property.id}`}
+                          className="group flex flex-col bg-paper p-5 hover:bg-paper-deep"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <h3 className="line-clamp-2 font-display text-[25px] leading-[1.02] text-ink">
+                                {property.title}
+                              </h3>
+                              <p className="mt-2 flex items-center gap-1.5 font-mono text-[10px] text-secondary">
+                                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                                {location || "Location not set"}
+                              </p>
+                            </div>
+                            <span className={`${status.badge} shrink-0`}>
+                              <span className={`h-1.5 w-1.5 ${status.dot}`} />
+                              {status.label}
+                            </span>
+                          </div>
 
-        {loading && (
-          <div className="flex items-center justify-center gap-2 py-2 text-xs text-slate-400">
-            <Spinner className="h-3.5 w-3.5" />
-            Loading your workspace…
-          </div>
-        )}
+                          <div className="mt-4 flex flex-wrap gap-1.5">
+                            {property.survey_number && (
+                              <span className="chip">Survey {property.survey_number}</span>
+                            )}
+                            {property.gat_number && (
+                              <span className="chip">Gat {property.gat_number}</span>
+                            )}
+                            {property.area_sqft !== null && property.area_sqft !== undefined && (
+                              <span className="chip">
+                                <Ruler className="h-3 w-3" />
+                                {formatArea(property.area_sqft)}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="mt-auto pt-6">
+                            <div className="flex items-center justify-between font-mono text-[10px]">
+                              <span className="uppercase tracking-[0.08em] text-secondary">
+                                Risk indicator
+                              </span>
+                              <span className={`uppercase tracking-[0.08em] ${risk.text}`}>
+                                {property.risk_score === null
+                                  ? "Not scored"
+                                  : `${Math.round(property.risk_score)}/100`}
+                              </span>
+                            </div>
+                            <div className="mt-2 h-1.5 w-full border border-ink">
+                              <div
+                                className={`h-full ${risk.bar}`}
+                                style={{
+                                  width: `${Math.min(Math.max(property.risk_score ?? 0, 0), 100)}%`,
+                                }}
+                              />
+                            </div>
+                            <div className="mt-4 flex items-center justify-between border-t border-quiet pt-3 font-mono text-[9px] uppercase tracking-[0.06em] text-secondary">
+                              <span>Created {formatDate(property.created_at)}</span>
+                              <span className="inline-flex items-center gap-1 text-ink">
+                                Open file
+                                <ArrowRight className="h-3.5 w-3.5" />
+                              </span>
+                            </div>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                    {properties.length % 2 === 1 && (
+                      <div className="hidden bg-paper sm:block" aria-hidden="true" />
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <section className="border-t border-ink">
+            <div className="dp-section py-10">
+              <div className="dp-rail">
+                <h2 className="display-heading">Workspace notes</h2>
+                <p className="mt-4 max-w-[18rem] text-[13px] leading-relaxed text-secondary">
+                  The operational state behind this portfolio.
+                </p>
+              </div>
+
+              <div className="dp-body">
+                <div className="grid gap-px bg-quiet lg:grid-cols-2">
+                  <div className="bg-paper p-6">
+                    <div className="flex items-start justify-between gap-3">
+                      <h3 className="flex items-center gap-2 font-display text-[25px] leading-none">
+                        <Activity className="h-4 w-4" />
+                        Analysis pipeline
+                      </h3>
+                      <span className="border border-quiet px-2 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-secondary">
+                        Deployment
+                      </span>
+                    </div>
+                    <p className="mt-2 font-mono text-[10px] text-secondary">
+                      Engines selected for this deployment.
+                    </p>
+
+                    <div className="mt-5">
+                      {(loading
+                        ? ENGINE_ORDER
+                        : ENGINE_ORDER.filter((key) => health[key])
+                      ).map((key) => {
+                        const value = health[key];
+                        const isMock = value === "mock";
+                        return (
+                          <div
+                            key={key}
+                            className="flex items-center justify-between gap-3 border-t border-quiet py-2.5"
+                          >
+                            <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-secondary">
+                              {ENGINE_LABELS[key] ?? humanize(key)}
+                            </p>
+                            {loading ? (
+                              <div className="skeleton h-3 w-16" />
+                            ) : (
+                              <span
+                                className={`border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.06em] ${
+                                  isMock
+                                    ? "border-quiet text-secondary"
+                                    : "border-ink bg-ink text-paper"
+                                }`}
+                              >
+                                {humanize(value ?? "—")}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="mt-4 flex items-center justify-between border-t border-ink pt-3 font-mono text-[9px] uppercase tracking-[0.06em] text-secondary">
+                      <span className="inline-flex items-center gap-1.5">
+                        <ShieldCheck className="h-3.5 w-3.5 text-ink" />
+                        Documents stay off-chain
+                      </span>
+                      <span>SHA-256</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-paper p-6">
+                    <h3 className="font-display text-[25px] leading-none">How verdicts are read</h3>
+                    <p className="mt-2 font-mono text-[10px] text-secondary">
+                      Project policy — findings are screening indicators.
+                    </p>
+                    <ul className="mt-5">
+                      {[
+                        {
+                          icon: ShieldCheck,
+                          title: "Verified",
+                          body: "No medium-or-higher findings and no ownership gaps.",
+                        },
+                        {
+                          icon: ShieldAlert,
+                          title: "Needs review",
+                          body: "Only low/medium items, or no completed documents yet.",
+                        },
+                        {
+                          icon: Flag,
+                          title: "Flagged",
+                          body: "A high/critical finding or any gap in the ownership chain.",
+                        },
+                      ].map((item) => (
+                        <li
+                          key={item.title}
+                          className="flex gap-3 border-t border-quiet py-3.5"
+                        >
+                          <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center border border-quiet text-ink">
+                            <item.icon className="h-4 w-4" />
+                          </span>
+                          <div>
+                            <p className="font-display text-[21px] leading-none text-ink">
+                              {item.title}
+                            </p>
+                            <p className="mt-1 text-[11px] leading-relaxed text-secondary">
+                              {item.body}
+                            </p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="mt-4 border-t border-quiet pt-3 font-mono text-[9px] uppercase leading-relaxed tracking-[0.06em] text-secondary">
+                      Items that could not be checked (RERA, litigation history, encumbrance) are
+                      always listed alongside the verdict.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {loading && (
+            <div className="flex items-center justify-center gap-2 border-t border-quiet py-5 font-mono text-[10px] uppercase tracking-[0.08em] text-secondary">
+              <Spinner className="h-3.5 w-3.5" />
+              Loading your workspace…
+            </div>
+          )}
+        </div>
       </main>
     </>
   );

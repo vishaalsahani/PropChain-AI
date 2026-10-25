@@ -1,31 +1,37 @@
-export function LogoMark({ className = "h-9 w-9", tone = "brand" }: { className?: string; tone?: "brand" | "light" }) {
+export function LogoMark({
+  className = "h-9 w-9",
+  tone = "brand",
+}: {
+  className?: string;
+  tone?: "brand" | "light";
+}) {
   return (
     <span
-      className={`relative inline-grid shrink-0 place-items-center overflow-hidden rounded-[13px] ${
+      className={`inline-grid shrink-0 place-items-center border ${
         tone === "light"
-          ? "bg-white/10 ring-1 ring-inset ring-white/20"
-          : "bg-gradient-to-br from-brand-700 via-brand-800 to-brand-950 shadow-[0_8px_20px_-10px_rgba(8,37,31,0.9)]"
+          ? "border-paper/50 bg-paper text-ink"
+          : "border-ink bg-ink text-paper"
       } ${className}`}
     >
       <svg viewBox="0 0 24 24" className="h-[58%] w-[58%]" fill="none" aria-hidden="true">
         <path
           d="M3.75 10.4 12 3.6l8.25 6.8"
-          stroke="#f7f5ef"
-          strokeWidth="1.7"
+          stroke="currentColor"
+          strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         <path
           d="M5.9 9.9v9.5h12.2V9.9"
-          stroke="#f7f5ef"
-          strokeWidth="1.7"
+          stroke="currentColor"
+          strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         <path
           d="M10 19.4v-4.3h4v4.3"
-          stroke="#dcbb72"
-          strokeWidth="1.7"
+          stroke="currentColor"
+          strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
@@ -38,15 +44,15 @@ export function Wordmark({ light = false }: { light?: boolean }) {
   return (
     <span className="flex items-center gap-2">
       <span
-        className={`font-display text-[19px] font-semibold leading-none tracking-tight ${
-          light ? "text-white" : "text-ink"
+        className={`font-display text-[20px] font-medium leading-none tracking-[-0.03em] ${
+          light ? "text-paper" : "text-ink"
         }`}
       >
         PropChain
       </span>
       <span
-        className={`rounded-md px-1.5 py-[3px] text-[9px] font-bold uppercase leading-none tracking-[0.18em] ${
-          light ? "bg-white/15 text-brand-100" : "bg-brand-900 text-brand-50"
+        className={`border px-1.5 py-[3px] font-mono text-[9px] font-medium uppercase leading-none tracking-[0.16em] ${
+          light ? "border-paper/50 text-paper" : "border-ink text-ink"
         }`}
       >
         AI

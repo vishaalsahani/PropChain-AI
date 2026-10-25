@@ -4,72 +4,65 @@ export default function RiskIndicator({ score }: { score: number | null }) {
   const tone = riskTone(score);
   const value = score === null ? null : Math.min(Math.max(score, 0), 100);
   const percent = value ?? 0;
-  const radius = 52;
-  const circumference = 2 * Math.PI * radius;
 
   return (
-    <section className="card">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="text-base font-semibold">Risk indicator</h2>
-        <span className="chip text-[10px] uppercase tracking-wide">Project-defined</span>
+    <section className="border border-ink p-5">
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="font-display text-[24px] leading-none">Risk indicator</h2>
+        <span className="border border-quiet px-2 py-1 font-mono text-[9px] uppercase tracking-[0.1em] text-secondary">
+          Project-defined
+        </span>
       </div>
 
-      <div className="mt-4 flex items-center gap-5">
-        <div className="relative h-[116px] w-[116px] shrink-0">
-          <svg viewBox="0 0 128 128" className="h-full w-full" role="img" aria-label={`Risk score ${value ?? "not available"}`}>
-            <circle cx="64" cy="64" r={radius} fill="none" stroke="#ece7db" strokeWidth="10" />
-            <circle
-              cx="64"
-              cy="64"
-              r={radius}
-              fill="none"
-              stroke={tone.stroke}
-              strokeWidth="10"
-              strokeLinecap="round"
-              strokeDasharray={circumference}
-              strokeDashoffset={circumference * (1 - percent / 100)}
-              transform="rotate(-90 64 64)"
-              className="transition-all duration-700"
-            />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="font-display text-[30px] leading-none text-ink">
-              {value === null ? "—" : Math.round(value)}
-            </span>
-            <span className="mt-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-              of 100
-            </span>
-          </div>
+      <div className="mt-6 flex items-end justify-between gap-4">
+        <div>
+          <p className="font-display text-[clamp(52px,5.8cqw,84px)] leading-none tracking-[-0.04em] text-ink">
+            {value === null ? "—" : Math.round(value)}
+          </p>
+          <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-secondary">
+            of 100
+          </p>
         </div>
+        <p className="mb-1 text-right font-mono text-[10px] uppercase tracking-[0.1em] text-ink">
+          {tone.label}
+        </p>
+      </div>
 
-        <div className="min-w-0">
-          <p className={`inline-flex items-center gap-1.5 text-sm font-semibold ${tone.text}`}>
-            <span className={`h-2 w-2 rounded-full ${tone.bar}`} />
-            {tone.label}
-          </p>
-          <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
-            {value === null
-              ? "Run the analysis to compute a risk indicator for this file."
-              : "Weighted from finding severity and confidence, plus any ownership gaps."}
-          </p>
+      <div className="mt-5" role="img" aria-label={`Risk score ${value ?? "not available"}`}>
+        <div className="h-3 w-full border border-ink">
+          <div className={`h-full ${tone.bar}`} style={{ width: `${percent}%` }} />
+        </div>
+        <div className="mt-2 flex justify-between font-mono text-[9px] uppercase tracking-[0.08em] text-secondary">
+          <span>0</span>
+          <span>100</span>
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-1.5 border-t border-ink/[0.06] pt-3">
+      <p className="mt-4 text-[12px] leading-relaxed text-secondary">
+        {value === null
+          ? "Run the analysis to compute a risk indicator for this file."
+          : "Weighted from finding severity and confidence, plus any ownership gaps."}
+      </p>
+
+      <div className="mt-5 grid grid-cols-3 border-t border-quiet pt-3">
         {[
-          { label: "Low", range: "0–39", dot: "bg-emerald-500" },
-          { label: "Moderate", range: "40–69", dot: "bg-amber-500" },
-          { label: "High", range: "70–100", dot: "bg-rose-500" },
+          { label: "Low", range: "0–39" },
+          { label: "Moderate", range: "40–69" },
+          { label: "High", range: "70–100" },
         ].map((band) => (
-          <div key={band.label} className="flex items-center gap-1.5 text-[10px] text-slate-400">
-            <span className={`h-1.5 w-1.5 rounded-full ${band.dot}`} />
-            <span className="font-medium text-slate-500">{band.label}</span>
-            <span>{band.range}</span>
+          <div
+            key={band.label}
+            className="border-l border-quiet pl-2 first:border-l-0 first:pl-0"
+          >
+            <p className="font-mono text-[9px] uppercase tracking-[0.08em] text-ink">
+              {band.label}
+            </p>
+            <p className="mt-0.5 font-mono text-[9px] text-secondary">{band.range}</p>
           </div>
         ))}
       </div>
 
-      <p className="mt-3 text-[10px] leading-relaxed text-slate-400">
+      <p className="mt-4 border-t border-quiet pt-3 font-mono text-[9px] uppercase leading-relaxed tracking-[0.08em] text-secondary">
         Not a legal conclusion — a screening indicator for a reviewer.
       </p>
     </section>

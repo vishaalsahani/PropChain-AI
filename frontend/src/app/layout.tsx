@@ -1,16 +1,23 @@
 import type { Metadata } from "next";
-import { Fraunces, Manrope } from "next/font/google";
+import { EB_Garamond, IBM_Plex_Mono, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 
-const sans = Manrope({
+const display = EB_Garamond({
   subsets: ["latin"],
-  variable: "--font-sans",
+  variable: "--font-eb-garamond",
   display: "swap",
 });
 
-const display = Fraunces({
+const text = Source_Serif_4({
   subsets: ["latin"],
-  variable: "--font-display",
+  variable: "--font-source-serif",
+  display: "swap",
+});
+
+const mono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-ibm-plex-mono",
   display: "swap",
 });
 
@@ -25,8 +32,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${sans.variable} ${display.variable}`}>
-      <body className="min-h-screen">{children}</body>
+    <html
+      lang="en"
+      className={`${display.variable} ${text.variable} ${mono.variable}`}
+    >
+      <body className="min-h-screen">
+        {/* The explicit wrapper keeps the text face in charge even when a
+            browser extension injects a body-level font override. */}
+        <div className="font-text" style={{ fontFamily: "var(--dp-typography-text)" }}>
+          {children}
+        </div>
+      </body>
     </html>
   );
 }

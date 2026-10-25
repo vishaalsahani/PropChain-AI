@@ -1,5 +1,5 @@
-//: Shared presentation tokens. Keeping the full class strings here (instead of
-//: building them dynamically) means Tailwind's scanner can see every variant.
+// Shared presentation tokens. Keeping the full class strings here (instead of
+// building them dynamically) means Tailwind's scanner can see every variant.
 
 export type StatusTone = {
   label: string;
@@ -9,38 +9,38 @@ export type StatusTone = {
 };
 
 const STATUS_BASE =
-  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ring-inset";
+  "inline-flex items-center gap-1.5 border px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.1em]";
 
 const PROPERTY_STATUS: Record<string, StatusTone> = {
   draft: {
     label: "Draft",
-    badge: `${STATUS_BASE} bg-slate-50 text-slate-600 ring-slate-500/15`,
-    dot: "bg-slate-400",
-    accent: "bg-slate-300",
+    badge: `${STATUS_BASE} border-quiet text-secondary`,
+    dot: "bg-quiet",
+    accent: "bg-quiet",
   },
   analyzing: {
     label: "Analyzing",
-    badge: `${STATUS_BASE} bg-sky-50 text-sky-700 ring-sky-600/15`,
-    dot: "bg-sky-500",
-    accent: "bg-sky-400",
+    badge: `${STATUS_BASE} border-ink text-ink`,
+    dot: "bg-ink",
+    accent: "bg-ink",
   },
   analyzed: {
     label: "Analyzed",
-    badge: `${STATUS_BASE} bg-emerald-50 text-emerald-700 ring-emerald-600/15`,
-    dot: "bg-emerald-500",
-    accent: "bg-emerald-400",
+    badge: `${STATUS_BASE} border-ink text-ink`,
+    dot: "bg-ink",
+    accent: "bg-ink",
   },
   needs_review: {
     label: "Needs review",
-    badge: `${STATUS_BASE} bg-amber-50 text-amber-700 ring-amber-600/20`,
-    dot: "bg-amber-500",
-    accent: "bg-amber-400",
+    badge: `${STATUS_BASE} border-ink bg-ink text-paper`,
+    dot: "bg-paper",
+    accent: "bg-ink",
   },
   flagged: {
     label: "Flagged",
-    badge: `${STATUS_BASE} bg-rose-50 text-rose-700 ring-rose-600/15`,
-    dot: "bg-rose-500",
-    accent: "bg-rose-400",
+    badge: `${STATUS_BASE} border-ink bg-ink text-paper`,
+    dot: "bg-paper",
+    accent: "bg-ink",
   },
 };
 
@@ -48,17 +48,17 @@ export function propertyStatus(status: string | null | undefined): StatusTone {
   if (!status) {
     return {
       label: "Unknown",
-      badge: `${STATUS_BASE} bg-slate-50 text-slate-600 ring-slate-500/15`,
-      dot: "bg-slate-400",
-      accent: "bg-slate-300",
+      badge: `${STATUS_BASE} border-quiet text-secondary`,
+      dot: "bg-quiet",
+      accent: "bg-quiet",
     };
   }
   return (
     PROPERTY_STATUS[status] ?? {
       label: humanize(status),
-      badge: `${STATUS_BASE} bg-slate-50 text-slate-600 ring-slate-500/15`,
-      dot: "bg-slate-400",
-      accent: "bg-slate-300",
+      badge: `${STATUS_BASE} border-quiet text-secondary`,
+      dot: "bg-quiet",
+      accent: "bg-quiet",
     }
   );
 }
@@ -66,23 +66,23 @@ export function propertyStatus(status: string | null | undefined): StatusTone {
 const DOC_STATUS: Record<string, { label: string; badge: string; dot: string }> = {
   pending: {
     label: "Queued",
-    badge: `${STATUS_BASE} bg-slate-50 text-slate-600 ring-slate-500/15`,
-    dot: "bg-slate-400",
+    badge: `${STATUS_BASE} border-quiet text-secondary`,
+    dot: "bg-quiet",
   },
   processing: {
     label: "Processing",
-    badge: `${STATUS_BASE} bg-sky-50 text-sky-700 ring-sky-600/15`,
-    dot: "bg-sky-500",
+    badge: `${STATUS_BASE} border-ink text-ink`,
+    dot: "bg-ink",
   },
   completed: {
     label: "Processed",
-    badge: `${STATUS_BASE} bg-emerald-50 text-emerald-700 ring-emerald-600/15`,
-    dot: "bg-emerald-500",
+    badge: `${STATUS_BASE} border-ink bg-ink text-paper`,
+    dot: "bg-paper",
   },
   failed: {
     label: "Failed",
-    badge: `${STATUS_BASE} bg-rose-50 text-rose-700 ring-rose-600/15`,
-    dot: "bg-rose-500",
+    badge: `${STATUS_BASE} border-ink text-ink`,
+    dot: "bg-ink",
   },
 };
 
@@ -98,32 +98,33 @@ export type SeverityTone = {
   text: string;
 };
 
-const SEVERITY_BASE = "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ring-1 ring-inset";
+const SEVERITY_BASE =
+  "inline-flex items-center border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.1em]";
 
 const SEVERITY: Record<string, SeverityTone> = {
   low: {
     label: "Low",
-    badge: `${SEVERITY_BASE} bg-emerald-50 text-emerald-700 ring-emerald-600/20`,
-    bar: "bg-emerald-400",
-    text: "text-emerald-700",
+    badge: `${SEVERITY_BASE} border-quiet text-secondary`,
+    bar: "bg-quiet",
+    text: "text-secondary",
   },
   medium: {
     label: "Medium",
-    badge: `${SEVERITY_BASE} bg-amber-50 text-amber-700 ring-amber-600/20`,
-    bar: "bg-amber-400",
-    text: "text-amber-700",
+    badge: `${SEVERITY_BASE} border-ink text-ink`,
+    bar: "bg-ink",
+    text: "text-ink",
   },
   high: {
     label: "High",
-    badge: `${SEVERITY_BASE} bg-orange-50 text-orange-700 ring-orange-600/20`,
-    bar: "bg-orange-400",
-    text: "text-orange-700",
+    badge: `${SEVERITY_BASE} border-ink bg-ink text-paper`,
+    bar: "bg-ink",
+    text: "text-ink",
   },
   critical: {
     label: "Critical",
-    badge: `${SEVERITY_BASE} bg-rose-50 text-rose-700 ring-rose-600/20`,
-    bar: "bg-rose-500",
-    text: "text-rose-700",
+    badge: `${SEVERITY_BASE} border-2 border-ink bg-ink text-paper`,
+    bar: "bg-ink",
+    text: "text-ink",
   },
 };
 
@@ -176,9 +177,33 @@ export function formatArea(area: number | null | undefined): string {
 
 export function riskTone(score: number | null | undefined) {
   if (score === null || score === undefined) {
-    return { label: "Not scored", bar: "bg-slate-300", text: "text-slate-500", stroke: "#cbd5e1" };
+    return {
+      label: "Not scored",
+      bar: "bg-quiet",
+      text: "text-secondary",
+      stroke: "#cfcfcf",
+    };
   }
-  if (score >= 70) return { label: "High risk", bar: "bg-rose-500", text: "text-rose-600", stroke: "#f43f5e" };
-  if (score >= 40) return { label: "Moderate risk", bar: "bg-amber-500", text: "text-amber-600", stroke: "#f59e0b" };
-  return { label: "Low risk", bar: "bg-emerald-500", text: "text-emerald-600", stroke: "#10b981" };
+  if (score >= 70) {
+    return {
+      label: "High risk",
+      bar: "bg-ink",
+      text: "text-ink",
+      stroke: "#000000",
+    };
+  }
+  if (score >= 40) {
+    return {
+      label: "Moderate risk",
+      bar: "bg-ink",
+      text: "text-ink",
+      stroke: "#000000",
+    };
+  }
+  return {
+    label: "Low risk",
+    bar: "bg-ink",
+    text: "text-ink",
+    stroke: "#000000",
+  };
 }

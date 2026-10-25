@@ -17,7 +17,6 @@ import {
   ShieldAlert,
   ShieldCheck,
   Sparkles,
-  UploadCloud,
 } from "@/components/icons";
 
 export const metadata: Metadata = {
@@ -85,27 +84,18 @@ const RECORD_STACK = [
 
 const VERDICTS = [
   {
-    tone: "border-emerald-200/70 bg-emerald-50/70",
-    iconTone: "bg-emerald-600 text-white",
-    titleTone: "text-emerald-950",
     label: "Verified",
     icon: ShieldCheck,
     body: "The checks that ran found no blocking inconsistency across the uploaded documents.",
     trigger: "Clean file, complete chain",
   },
   {
-    tone: "border-amber-200/70 bg-amber-50/70",
-    iconTone: "bg-amber-500 text-white",
-    titleTone: "text-amber-950",
     label: "Needs review",
     icon: ShieldAlert,
     body: "Something could not be cleared automatically. A reviewer decides what to do next.",
     trigger: "Ambiguous extract or incomplete evidence",
   },
   {
-    tone: "border-rose-200/70 bg-rose-50/70",
-    iconTone: "bg-rose-500 text-white",
-    titleTone: "text-rose-950",
     label: "Flagged",
     icon: Flag,
     body: "A significant finding or an ownership gap needs attention before the file proceeds.",
@@ -118,419 +108,346 @@ export default function HomePage() {
     <>
       <SiteHeader />
       <main>
-        {/* Hero */}
-        <section className="relative overflow-hidden">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-40 -top-48 h-[34rem] w-[34rem] rounded-full bg-brand-200/40 blur-3xl"
-          />
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -left-40 top-40 h-[28rem] w-[28rem] rounded-full bg-brass-200/30 blur-3xl"
-          />
-
-          <div className="shell relative grid gap-14 py-16 md:py-20 lg:grid-cols-[1.04fr_0.96fr] lg:items-center lg:gap-12 lg:py-24">
-            <div className="animate-fade-up">
-              <p className="inline-flex items-center gap-2 rounded-full border border-brand-900/10 bg-white/60 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.17em] text-brand-800 shadow-soft backdrop-blur">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                AI-assisted screening · Maharashtra land records
-              </p>
-
-              <h1 className="mt-6 max-w-[13ch] text-balance text-[2.75rem] leading-[1.03] tracking-[-0.025em] sm:text-[3.75rem] lg:text-[3.5rem] xl:text-[4.1rem]">
-                Due diligence that{" "}
-                <span className="relative inline-block text-brand-800">
-                  shows its evidence.
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 320 12"
-                    preserveAspectRatio="none"
-                    className="absolute -bottom-2 left-0 h-2.5 w-full text-brass-400"
-                  >
-                    <path
-                      d="M2 8.5c58-4.5 112-4.5 166-2 45 2 92 1.5 150-3"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3.5"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </span>
-              </h1>
-
-              <p className="mt-7 max-w-xl text-[15px] leading-7 text-slate-600">
-                PropChain-AI reads sale deeds, 7/12 extracts, property cards and encumbrance
-                certificates in English and Marathi — then cross-checks them and traces the chain
-                of title, with a reason behind every finding.
-              </p>
-
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Link href="/register" className="btn-primary px-5 py-3 text-[13px]">
-                  Create a property file
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-                <Link href="/login" className="btn-secondary px-5 py-3 text-[13px]">
-                  Sign in to the workspace
-                </Link>
+        <section className="border-b border-quiet">
+          <div className="shell">
+            <div className="dp-section section-y">
+              <div className="dp-rail">
+                <p className="eyebrow">
+                  AI-assisted screening
+                  <br />
+                  Maharashtra land records
+                </p>
+                <p className="mt-6 max-w-[14rem] font-mono text-[10px] uppercase leading-relaxed tracking-[0.08em] text-secondary">
+                  Findings are screening indicators for a reviewer — not legal determinations.
+                </p>
               </div>
 
-              <ul className="mt-9 space-y-2.5 text-[12px] text-slate-500">
-                {[
-                  "Documents stay off-chain — only their SHA-256 hashes are registered.",
-                  "Every not-checked item stays visible in the verdict.",
-                  "Screening indicators for a reviewer — not a legal title opinion.",
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-2.5">
-                    <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-brand-100 text-brand-800">
-                      <Check className="h-2.5 w-2.5" />
-                    </span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+              <div className="dp-body">
+                <h1 className="display-title">
+                  Due diligence that{" "}
+                  <em className="font-display italic">shows its evidence.</em>
+                </h1>
 
-            <div className="relative mx-auto w-full max-w-[480px] animate-fade-up animation-delay-200">
-              <div
-                aria-hidden="true"
-                className="absolute -inset-8 rounded-[3rem] bg-gradient-to-br from-brand-200/60 via-paper to-brass-200/50 blur-2xl"
-              />
-              <div className="relative rounded-[26px] border border-ink/[0.08] bg-white/90 p-5 shadow-lift backdrop-blur-sm sm:p-6">
-                <div className="flex items-center justify-between gap-3">
+                <div className="mt-10 grid gap-10 lg:grid-cols-[0.94fr_1.06fr] lg:items-start">
                   <div>
-                    <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400">
-                      Screening result
+                    <p className="max-w-[34em] text-[17px] leading-[1.55] text-secondary">
+                      PropChain-AI reads sale deeds, 7/12 extracts, property cards and encumbrance
+                      certificates in English and Marathi — then cross-checks them and traces the
+                      chain of title, with a reason behind every finding.
                     </p>
-                    <p className="mt-0.5 text-[11px] text-slate-500">Gat 214 · Koregaon, Satara</p>
-                  </div>
-                  <span className="badge bg-amber-500/10 text-amber-800 ring-1 ring-inset ring-amber-600/20">
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                    Needs review
-                  </span>
-                </div>
 
-                <div className="mt-4 rounded-2xl border border-amber-600/10 bg-gradient-to-br from-amber-50 to-white p-4">
-                  <div className="flex items-start gap-3">
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-amber-500 text-white">
-                      <ShieldAlert className="h-4.5 w-4.5" />
-                    </span>
-                    <div>
-                      <p className="font-display text-[19px] leading-tight text-amber-950">
-                        Area mismatch across documents
-                      </p>
-                      <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-                        Sale deed records 2,000 sq ft. The 7/12 extract records 1,850 sq ft.
-                      </p>
+                    <div className="mt-8 flex flex-wrap items-center gap-3">
+                      <Link href="/register" className="btn btn-primary">
+                        Create a property file
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                      <Link href="/login" className="btn btn-secondary">
+                        Sign in to the workspace
+                      </Link>
                     </div>
+
+                    <ul className="mt-10 space-y-3 border-t border-quiet pt-5 text-[13px] leading-relaxed text-secondary">
+                      {[
+                        "Documents stay off-chain — only their SHA-256 hashes are registered.",
+                        "Every not-checked item stays visible in the verdict.",
+                        "Screening indicators for a reviewer — not a legal title opinion.",
+                      ].map((item) => (
+                        <li key={item} className="flex items-start gap-2.5">
+                          <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center border border-ink text-ink">
+                            <Check className="h-2.5 w-2.5" />
+                          </span>
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="border border-ink">
+                    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-ink p-4">
+                      <div>
+                        <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-secondary">
+                          Screening result
+                        </p>
+                        <p className="mt-1 font-display text-[19px] leading-none">
+                          Gat 214 · Koregaon, Satara
+                        </p>
+                      </div>
+                      <span className="border border-ink bg-ink px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.1em] text-paper">
+                        Needs review
+                      </span>
+                    </div>
+
+                    <div className="p-4">
+                      <div className="border border-ink p-4">
+                        <div className="flex items-start gap-3">
+                          <span className="grid h-9 w-9 shrink-0 place-items-center border border-ink text-ink">
+                            <ShieldAlert className="h-4 w-4" />
+                          </span>
+                          <div>
+                            <p className="font-display text-[24px] leading-[1.02]">
+                              Area mismatch across documents
+                            </p>
+                            <p className="mt-2 text-[11px] leading-relaxed text-secondary">
+                              Sale deed records 2,000 sq ft. The 7/12 extract records 1,850 sq ft.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4">
+                        {[
+                          { icon: FileText, text: "Sale deed · 2019 · 2,000 sq ft" },
+                          { icon: MapPin, text: "7/12 extract · 1,850 sq ft" },
+                          { icon: Flag, text: "150 sq ft difference · medium severity" },
+                        ].map((row) => (
+                          <div
+                            key={row.text}
+                            className="flex items-center gap-2.5 border-t border-quiet py-2.5 font-mono text-[10px] text-secondary first:border-t-0"
+                          >
+                            <row.icon className="h-3.5 w-3.5 shrink-0 text-ink" />
+                            <span>{row.text}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="border-t border-ink pt-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="font-mono text-[9px] uppercase tracking-[0.1em] text-secondary">
+                            Ownership chain
+                          </p>
+                          <span className="font-mono text-[9px] uppercase tracking-[0.08em] text-ink">
+                            1 gap noted
+                          </span>
+                        </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5 font-mono text-[9px] text-secondary">
+                          <span className="border border-quiet px-2 py-1">Dagdu Shinde</span>
+                          <ArrowRight className="h-3 w-3 shrink-0 text-quiet" />
+                          <span className="border border-quiet px-2 py-1">Vitthal More</span>
+                          <ArrowRight className="h-3 w-3 shrink-0 text-quiet" />
+                          <span className="border border-dashed border-ink px-2 py-1 text-ink">
+                            Missing link
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex items-center justify-between gap-2 bg-ink px-3 py-2.5">
+                        <span className="inline-flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.08em] text-paper">
+                          <Hash className="h-3 w-3" />
+                          SHA-256 anchored
+                        </span>
+                        <span className="font-mono text-[9px] tracking-tight text-quiet">
+                          9f3a82…c21e
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="border-t border-quiet px-4 py-2.5 font-mono text-[9px] uppercase tracking-[0.08em] text-secondary">
+                      Illustrative screening output
+                    </p>
                   </div>
                 </div>
 
-                <div className="mt-4 space-y-2.5">
-                  {[
-                    { icon: FileText, text: "Sale deed · 2019 · 2,000 sq ft", tone: "text-slate-500" },
-                    { icon: MapPin, text: "7/12 extract · 1,850 sq ft", tone: "text-slate-500" },
-                    { icon: Flag, text: "150 sq ft difference · medium severity", tone: "text-amber-700" },
-                  ].map((row) => (
-                    <div
-                      key={row.text}
-                      className="flex items-center gap-2.5 rounded-lg border border-ink/[0.05] bg-paper/50 px-3 py-2 text-[11px]"
+                <div className="mt-10 flex flex-wrap items-center gap-x-7 gap-y-2.5 border-t border-quiet pt-5">
+                  <span className="eyebrow text-ink">Built for the Maharashtra record stack</span>
+                  {RECORD_STACK.map((item) => (
+                    <span
+                      key={item}
+                      className="inline-flex items-center gap-1.5 font-mono text-[10px] text-secondary"
                     >
-                      <row.icon className={`h-3.5 w-3.5 shrink-0 ${row.tone}`} />
-                      <span className="text-slate-600">{row.text}</span>
-                    </div>
+                      <Check className="h-3 w-3 text-ink" />
+                      {item}
+                    </span>
                   ))}
                 </div>
-
-                <div className="mt-4 border-t border-ink/[0.06] pt-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                      Ownership chain
-                    </p>
-                    <span className="text-[9px] font-semibold text-amber-700">1 gap noted</span>
-                  </div>
-                  <div className="mt-2 flex items-center gap-1.5 text-[10px] font-medium text-slate-600">
-                    <span className="rounded-md bg-paper px-2 py-1 ring-1 ring-inset ring-ink/[0.06]">
-                      Dagdu Shinde
-                    </span>
-                    <ArrowRight className="h-3 w-3 shrink-0 text-slate-300" />
-                    <span className="rounded-md bg-paper px-2 py-1 ring-1 ring-inset ring-ink/[0.06]">
-                      Vitthal More
-                    </span>
-                    <ArrowRight className="h-3 w-3 shrink-0 text-slate-300" />
-                    <span className="rounded-md border border-dashed border-amber-500/30 bg-amber-50/60 px-2 py-1 text-amber-800">
-                      Missing link
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex items-center justify-between gap-2 rounded-xl bg-brand-950 px-3 py-2.5">
-                  <span className="inline-flex items-center gap-1.5 text-[10px] font-medium text-brand-100">
-                    <Hash className="h-3 w-3 text-brass-300" />
-                    SHA-256 anchored
-                  </span>
-                  <span className="font-mono text-[9px] tracking-tight text-brand-200/70">
-                    9f3a82…c21e
-                  </span>
-                </div>
               </div>
-              <p className="mt-3 text-center text-[10px] text-slate-400">
-                Illustrative screening output
-              </p>
-            </div>
-          </div>
-
-          <div className="shell relative">
-            <div className="flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-ink/[0.07] py-5 text-[11px] text-slate-500">
-              <span className="font-semibold uppercase tracking-[0.15em] text-slate-400">
-                Built for the Maharashtra record stack
-              </span>
-              {RECORD_STACK.map((item) => (
-                <span key={item} className="inline-flex items-center gap-1.5">
-                  <Check className="h-3 w-3 text-brand-600" />
-                  {item}
-                </span>
-              ))}
             </div>
           </div>
         </section>
 
-        {/* What we check */}
-        <section id="checks" className="scroll-mt-24 py-20">
+        <section id="checks" className="scroll-mt-24 border-b border-quiet">
           <div className="shell">
-            <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
-              <div>
-                <p className="eyebrow text-brand-700">The review</p>
-                <h2 className="mt-3 max-w-sm text-balance text-3xl leading-tight tracking-[-0.02em] sm:text-4xl">
+            <div className="dp-section section-y">
+              <div className="dp-rail">
+                <p className="eyebrow">The review</p>
+                <h2 className="display-heading mt-4">
                   More than OCR. A documented chain of reasoning.
                 </h2>
-                <p className="mt-4 max-w-md text-sm leading-7 text-slate-600">
+                <p className="mt-5 max-w-[34em] text-[14px] leading-[1.55] text-secondary">
                   Extraction is only the first step. The engine compares what each document says,
                   reconstructs the sequence of transfers, and applies a fixed Maharashtra rule pack
                   to decide what a reviewer should look at.
                 </p>
-                <div className="mt-6 rounded-2xl border border-brand-900/10 bg-brand-50/60 p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-800">
-                    The principle
-                  </p>
-                  <p className="mt-1.5 font-display text-lg leading-snug text-brand-950">
+                <div className="mt-8 border-t border-ink pt-4">
+                  <p className="eyebrow text-ink">The principle</p>
+                  <p className="mt-2 font-display text-[24px] leading-[1.05]">
                     If the evidence isn&apos;t there, the finding says so.
                   </p>
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                {CHECKS.map((item) => (
-                  <article
-                    key={item.title}
-                    className="group rounded-2xl border border-ink/[0.06] bg-white/70 p-5 shadow-soft backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:border-brand-200 hover:bg-white/90"
-                  >
-                    <span className="grid h-10 w-10 place-items-center rounded-xl border border-brand-900/10 bg-brand-50 text-brand-700">
-                      <item.icon className="h-[18px] w-[18px]" />
-                    </span>
-                    <h3 className="mt-4 text-[17px] font-medium leading-snug">{item.title}</h3>
-                    <p className="mt-2 text-[12px] leading-relaxed text-slate-500">{item.body}</p>
-                    <p className="mt-4 border-t border-ink/[0.06] pt-3 text-[10px] leading-relaxed text-slate-400">
-                      {item.footnote}
-                    </p>
-                  </article>
-                ))}
+              <div className="dp-body">
+                <div className="grid gap-px bg-quiet sm:grid-cols-2">
+                  {CHECKS.map((item) => (
+                    <article key={item.title} className="bg-paper p-6">
+                      <span className="grid h-10 w-10 place-items-center border border-ink text-ink">
+                        <item.icon className="h-[18px] w-[18px]" />
+                      </span>
+                      <h3 className="mt-5 font-display text-[26px] leading-[1.02]">{item.title}</h3>
+                      <p className="mt-3 text-[13px] leading-relaxed text-secondary">{item.body}</p>
+                      <p className="mt-5 border-t border-quiet pt-3 font-mono text-[10px] uppercase leading-relaxed tracking-[0.06em] text-secondary">
+                        {item.footnote}
+                      </p>
+                    </article>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* How it works */}
-        <section id="how-it-works" className="relative scroll-mt-20 overflow-hidden bg-brand-950 py-20 text-white">
-          <div aria-hidden="true" className="absolute inset-0 bg-grid-dark opacity-70" />
-          <div
-            aria-hidden="true"
-            className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-brand-500/20 blur-3xl"
-          />
-
-          <div className="shell relative">
-            <div className="flex flex-wrap items-end justify-between gap-6">
-              <div className="max-w-2xl">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brass-300">
-                  How it works
-                </p>
-                <h2 className="mt-3 text-balance text-3xl leading-tight tracking-[-0.02em] text-white sm:text-4xl">
+        <section id="how-it-works" className="scroll-mt-20 border-b border-ink bg-ink text-paper">
+          <div className="shell">
+            <div className="dp-section section-y">
+              <div className="dp-rail">
+                <p className="eyebrow text-quiet">How it works</p>
+                <h2 className="display-heading mt-4 text-paper">
                   From a folder of scans to a reviewable verdict.
                 </h2>
+                <p className="mt-5 max-w-[30em] text-[13px] leading-relaxed text-quiet">
+                  No black-box score. Each stage leaves a trace you can inspect in the workspace and
+                  in the report.
+                </p>
               </div>
-              <p className="max-w-sm text-[13px] leading-6 text-brand-100/65">
-                No black-box score. Each stage leaves a trace you can inspect in the workspace and
-                in the report.
-              </p>
-            </div>
 
-            <div className="mt-10 grid gap-4 md:grid-cols-3">
-              {STEPS.map((step, index) => (
-                <article
-                  key={step.title}
-                  className="relative rounded-2xl border border-white/10 bg-white/[0.045] p-5 backdrop-blur-sm"
-                >
-                  <span className="absolute right-5 top-4 font-display text-4xl leading-none text-white/10">
-                    0{index + 1}
-                  </span>
-                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-brass-200 ring-1 ring-inset ring-white/10">
-                    <step.icon className="h-[18px] w-[18px]" />
-                  </span>
-                  <h3 className="mt-5 text-[18px] font-medium text-white">{step.title}</h3>
-                  <p className="mt-2 text-[12px] leading-relaxed text-brand-100/65">{step.body}</p>
-                  <p className="mt-4 border-t border-white/10 pt-3 text-[10px] leading-relaxed text-brand-200/50">
-                    {step.meta}
-                  </p>
-                </article>
-              ))}
-            </div>
-
-            <div className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
-              <span className="mr-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-brass-300">
-                Pipeline
-              </span>
-              {["OCR", "Classify", "Extract", "Cross-check", "Chain", "Verdict policy", "Report"].map(
-                (stage, index, all) => (
-                  <span key={stage} className="inline-flex items-center gap-2 text-[11px] text-brand-100/60">
-                    {stage}
-                    {index < all.length - 1 && <ArrowRight className="h-3 w-3 text-white/20" />}
-                  </span>
-                ),
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* Verdicts */}
-        <section id="verdicts" className="scroll-mt-24 py-20">
-          <div className="shell">
-            <div className="mx-auto max-w-2xl text-center">
-              <p className="eyebrow text-brand-700">Screening verdicts</p>
-              <h2 className="mt-3 text-balance text-3xl leading-tight tracking-[-0.02em] sm:text-4xl">
-                Three outcomes. One transparent policy.
-              </h2>
-              <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-slate-600">
-                The verdict is a screening output under a fixed rule pack. It tells a reviewer what
-                needs attention — it does not silently turn missing evidence into a pass.
-              </p>
-            </div>
-
-            <div className="mt-10 grid gap-4 md:grid-cols-3">
-              {VERDICTS.map((verdict) => (
-                <article
-                  key={verdict.label}
-                  className={`rounded-2xl border p-5 shadow-soft ${verdict.tone}`}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className={`grid h-10 w-10 place-items-center rounded-xl ${verdict.iconTone}`}>
-                      <verdict.icon className="h-[18px] w-[18px]" />
-                    </span>
-                    <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                      Verdict
-                    </span>
-                  </div>
-                  <h3 className={`mt-4 font-display text-[26px] leading-none ${verdict.titleTone}`}>
-                    {verdict.label}
-                  </h3>
-                  <p className="mt-3 min-h-[60px] text-[12px] leading-relaxed text-slate-600">
-                    {verdict.body}
-                  </p>
-                  <p className="border-t border-ink/[0.07] pt-3 text-[10px] leading-relaxed text-slate-500">
-                    <span className="font-semibold text-slate-600">Typical trigger · </span>
-                    {verdict.trigger}
-                  </p>
-                </article>
-              ))}
-            </div>
-
-            <div className="mx-auto mt-8 flex max-w-3xl items-start gap-3 rounded-2xl border border-ink/[0.06] bg-white/60 px-4 py-3.5">
-              <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-brand-700" />
-              <p className="text-[11px] leading-relaxed text-slate-500">
-                <span className="font-semibold text-slate-700">Not a legal determination.</span>{" "}
-                Findings are screening indicators for a human reviewer. A clean verdict is not a
-                title certificate, and a flagged verdict is not an allegation.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Responsible AI */}
-        <section id="responsible" className="scroll-mt-24 pb-20">
-          <div className="shell">
-            <div className="overflow-hidden rounded-3xl border border-ink/[0.06] bg-white/60 shadow-soft backdrop-blur-sm">
-              <div className="grid lg:grid-cols-[0.95fr_1.05fr]">
-                <div className="p-7 sm:p-10">
-                  <p className="eyebrow text-brand-700">Responsible by design</p>
-                  <h2 className="mt-3 text-balance text-3xl leading-tight tracking-[-0.02em]">
-                    Evidence over confidence.
-                  </h2>
-                  <p className="mt-4 text-sm leading-7 text-slate-600">
-                    Property records are messy. The useful question is not &ldquo;does the AI look
-                    sure?&rdquo; but &ldquo;what exactly did it check, what did it find, and what did
-                    it leave unknown?&rdquo;
-                  </p>
-
-                  <div className="mt-7 space-y-4">
-                    {[
-                      {
-                        title: "Every finding has a source",
-                        body: "The document, extracted values and rule reference travel with each finding — no unsupported scores.",
-                      },
-                      {
-                        title: "Unknowns are first-class",
-                        body: "RERA, litigation, government record checks and title opinion stay in a visible not-checked list.",
-                      },
-                      {
-                        title: "Documents stay private",
-                        body: "Only hashes are registered on-chain. Original files remain off-chain in the application store.",
-                      },
-                    ].map((item) => (
-                      <div key={item.title} className="flex gap-3">
-                        <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-100 text-brand-800">
-                          <Check className="h-3 w-3" />
+              <div className="dp-body dp-body--inverted">
+                <div className="grid gap-px bg-quiet-inverted md:grid-cols-3">
+                  {STEPS.map((step, index) => (
+                    <article key={step.title} className="bg-ink p-6">
+                      <div className="flex items-start justify-between gap-4">
+                        <span className="grid h-10 w-10 place-items-center border border-quiet-inverted text-quiet">
+                          <step.icon className="h-[18px] w-[18px]" />
                         </span>
-                        <div>
-                          <p className="text-[13px] font-semibold text-ink">{item.title}</p>
-                          <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">
-                            {item.body}
-                          </p>
-                        </div>
+                        <span className="font-display text-[54px] leading-none text-quiet-inverted">
+                          0{index + 1}
+                        </span>
                       </div>
-                    ))}
+                      <h3 className="mt-6 font-display text-[26px] leading-[1.02] text-paper">
+                        {step.title}
+                      </h3>
+                      <p className="mt-3 text-[13px] leading-relaxed text-quiet">{step.body}</p>
+                      <p className="mt-5 border-t border-quiet-inverted pt-3 font-mono text-[9px] uppercase leading-relaxed tracking-[0.06em] text-quiet">
+                        {step.meta}
+                      </p>
+                    </article>
+                  ))}
+                </div>
+
+                <div className="mt-8 flex flex-wrap items-center gap-x-2 gap-y-2 border-t border-quiet-inverted pt-4">
+                  <span className="mr-2 font-mono text-[9px] uppercase tracking-[0.1em] text-quiet">
+                    Pipeline
+                  </span>
+                  {["OCR", "Classify", "Extract", "Cross-check", "Chain", "Verdict policy", "Report"].map(
+                    (stage, index, all) => (
+                      <span
+                        key={stage}
+                        className="inline-flex items-center gap-2 font-mono text-[10px] text-quiet"
+                      >
+                        {stage}
+                        {index < all.length - 1 && (
+                          <ArrowRight className="h-3 w-3 text-quiet-inverted" />
+                        )}
+                      </span>
+                    ),
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="verdicts" className="scroll-mt-24 border-b border-quiet">
+          <div className="shell">
+            <div className="dp-section section-y">
+              <div className="dp-rail">
+                <p className="eyebrow">Screening verdicts</p>
+                <h2 className="display-heading mt-4">Three outcomes. One transparent policy.</h2>
+                <p className="mt-5 max-w-[32em] text-[14px] leading-[1.55] text-secondary">
+                  The verdict is a screening output under a fixed rule pack. It tells a reviewer what
+                  needs attention — it does not silently turn missing evidence into a pass.
+                </p>
+              </div>
+
+              <div className="dp-body">
+                <div className="bg-ink p-5 sm:p-8">
+                  <div className="grid gap-px bg-quiet-inverted md:grid-cols-3">
+                    {VERDICTS.map((verdict, index) => {
+                      const featured = index === 1;
+                      const Icon = verdict.icon;
+                      return (
+                        <article
+                          key={verdict.label}
+                          className={`p-6 ${
+                            featured
+                              ? "relative z-10 border border-ink bg-paper text-ink md:-my-5 md:p-8"
+                              : "bg-ink text-paper"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <span
+                              className={`grid h-10 w-10 place-items-center border ${
+                                featured
+                                  ? "border-ink text-ink"
+                                  : "border-quiet-inverted text-quiet"
+                              }`}
+                            >
+                              <Icon className="h-[18px] w-[18px]" />
+                            </span>
+                            <span
+                              className={`font-mono text-[9px] uppercase tracking-[0.1em] ${
+                                featured ? "text-secondary" : "text-quiet"
+                              }`}
+                            >
+                              Verdict
+                            </span>
+                          </div>
+                          <h3
+                            className={`mt-6 font-display text-[36px] leading-none tracking-[-0.03em] ${
+                              featured ? "text-ink" : "text-paper"
+                            }`}
+                          >
+                            {verdict.label}
+                          </h3>
+                          <p
+                            className={`mt-3 min-h-[84px] text-[13px] leading-relaxed ${
+                              featured ? "text-secondary" : "text-quiet"
+                            }`}
+                          >
+                            {verdict.body}
+                          </p>
+                          <p
+                            className={`border-t pt-3 font-mono text-[9px] uppercase leading-relaxed tracking-[0.06em] ${
+                              featured
+                                ? "border-quiet text-secondary"
+                                : "border-quiet-inverted text-quiet"
+                            }`}
+                          >
+                            <span className={featured ? "text-ink" : "text-paper"}>
+                              Typical trigger
+                            </span>{" "}
+                            · {verdict.trigger}
+                          </p>
+                        </article>
+                      );
+                    })}
                   </div>
                 </div>
 
-                <div className="border-t border-ink/[0.06] bg-paper/50 p-7 sm:p-10 lg:border-l lg:border-t-0">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                      In every verdict
-                    </p>
-                    <span className="badge bg-brand-900/5 text-brand-800 ring-1 ring-inset ring-brand-900/10">
-                      Always stated
-                    </span>
-                  </div>
-                  <h3 className="mt-4 font-display text-2xl leading-snug">
-                    What this review does <span className="text-brand-700">not</span> decide.
-                  </h3>
-                  <div className="mt-5 grid gap-2 sm:grid-cols-2">
-                    {[
-                      "RERA registration status",
-                      "Pending litigation",
-                      "Government record verification",
-                      "Legal title opinion",
-                      "Physical boundary verification",
-                      "Mortgage or lien clearance",
-                    ].map((item) => (
-                      <div
-                        key={item}
-                        className="flex items-start gap-2 rounded-xl border border-ink/[0.06] bg-white/70 px-3 py-2.5 text-[11px] text-slate-500"
-                      >
-                        <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-slate-300" />
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-                  <p className="mt-5 border-t border-ink/[0.07] pt-4 text-[10px] leading-relaxed text-slate-400">
-                    These items are surfaced explicitly so a reviewer can follow up outside the
-                    system. They are never assumed to be clean.
+                <div className="mt-6 flex max-w-[52em] items-start gap-3 border-t border-ink pt-4">
+                  <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-ink" />
+                  <p className="text-[12px] leading-relaxed text-secondary">
+                    <span className="font-medium text-ink">Not a legal determination.</span> Findings
+                    are screening indicators for a human reviewer. A clean verdict is not a title
+                    certificate, and a flagged verdict is not an allegation.
                   </p>
                 </div>
               </div>
@@ -538,45 +455,122 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Final CTA */}
-        <section className="pb-20">
+        <section id="responsible" className="scroll-mt-24 border-b border-quiet">
           <div className="shell">
-            <div className="relative overflow-hidden rounded-[28px] bg-brand-900 px-6 py-12 text-center shadow-lift sm:px-12 sm:py-14">
-              <div aria-hidden="true" className="absolute inset-0 bg-grid-dark opacity-50" />
-              <div
-                aria-hidden="true"
-                className="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-brass-400/20 blur-3xl"
-              />
-              <div className="relative mx-auto max-w-xl">
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-brand-100">
-                  <Sparkles className="h-3 w-3 text-brass-300" />
-                  Start with one property
-                </span>
-                <h2 className="mt-5 text-balance font-display text-3xl leading-tight text-white sm:text-4xl">
+            <div className="dp-section section-y">
+              <div className="dp-rail">
+                <p className="eyebrow">Responsible by design</p>
+                <h2 className="display-heading mt-4">Evidence over confidence.</h2>
+                <p className="mt-5 max-w-[30em] text-[14px] leading-[1.55] text-secondary">
+                  Property records are messy. The useful question is not &ldquo;does the AI look
+                  sure?&rdquo; but &ldquo;what exactly did it check, what did it find, and what did
+                  it leave unknown?&rdquo;
+                </p>
+              </div>
+
+              <div className="dp-body">
+                <div className="grid gap-8 lg:grid-cols-2 lg:gap-10">
+                  <div>
+                    <ul className="border-t border-quiet">
+                      {[
+                        {
+                          title: "Every finding has a source",
+                          body: "The document, extracted values and rule reference travel with each finding — no unsupported scores.",
+                        },
+                        {
+                          title: "Unknowns are first-class",
+                          body: "RERA, litigation, government record checks and title opinion stay in a visible not-checked list.",
+                        },
+                        {
+                          title: "Documents stay private",
+                          body: "Only hashes are registered on-chain. Original files remain off-chain in the application store.",
+                        },
+                      ].map((item) => (
+                        <li key={item.title} className="flex gap-3 border-b border-quiet py-5">
+                          <span className="mt-1 grid h-5 w-5 shrink-0 place-items-center border border-ink text-ink">
+                            <Check className="h-3 w-3" />
+                          </span>
+                          <div>
+                            <p className="font-display text-[22px] leading-[1.05] text-ink">
+                              {item.title}
+                            </p>
+                            <p className="mt-1.5 text-[12px] leading-relaxed text-secondary">
+                              {item.body}
+                            </p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="bg-ink p-6 text-paper lg:p-8">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-mono text-[9px] uppercase tracking-[0.1em] text-quiet">
+                        In every verdict
+                      </p>
+                      <span className="border border-quiet-inverted px-2 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-quiet">
+                        Always stated
+                      </span>
+                    </div>
+                    <h3 className="mt-5 font-display text-[30px] leading-[1.02] text-paper">
+                      What this review does <em className="italic text-quiet">not</em> decide.
+                    </h3>
+                    <div className="mt-5 grid gap-px bg-quiet-inverted sm:grid-cols-2">
+                      {[
+                        "RERA registration status",
+                        "Pending litigation",
+                        "Government record verification",
+                        "Legal title opinion",
+                        "Physical boundary verification",
+                        "Mortgage or lien clearance",
+                      ].map((item) => (
+                        <div
+                          key={item}
+                          className="flex items-start gap-2 bg-ink px-3 py-2.5 font-mono text-[10px] leading-relaxed text-quiet"
+                        >
+                          <span className="mt-1.5 h-1 w-1 shrink-0 bg-quiet" />
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="mt-5 border-t border-quiet-inverted pt-4 font-mono text-[9px] uppercase leading-relaxed tracking-[0.06em] text-quiet">
+                      These items are surfaced explicitly so a reviewer can follow up outside the
+                      system. They are never assumed to be clean.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-t-[3px] border-ink bg-ink text-paper">
+          <div className="shell">
+            <div className="dp-section section-y">
+              <div className="dp-rail">
+                <p className="eyebrow text-quiet">Start with one property</p>
+                <p className="mt-5 max-w-[13rem] font-mono text-[10px] uppercase leading-relaxed tracking-[0.08em] text-quiet">
+                  Demo environment · Uploaded documents stay off-chain
+                </p>
+              </div>
+
+              <div className="dp-body dp-body--inverted">
+                <h2 className="font-display text-[clamp(42px,6cqw,84px)] font-medium leading-[0.98] tracking-[-0.04em] text-paper">
                   Open your first property file.
                 </h2>
-                <p className="mx-auto mt-3 max-w-md text-[13px] leading-6 text-brand-100/70">
+                <p className="mt-5 max-w-[34em] text-[15px] leading-relaxed text-quiet">
                   Create a workspace, upload a deed set and follow the evidence from extraction to
                   an explainable screening verdict.
                 </p>
-                <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-                  <Link
-                    href="/register"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-[13px] font-semibold text-brand-950 shadow-soft transition hover:-translate-y-px hover:bg-brand-50"
-                  >
+                <div className="mt-8 flex flex-wrap items-center gap-3">
+                  <Link href="/register" className="btn btn-on-ink">
                     Create an account
                     <ArrowRight className="h-4 w-4" />
                   </Link>
-                  <Link
-                    href="/login"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-5 py-3 text-[13px] font-semibold text-white transition hover:bg-white/10"
-                  >
+                  <Link href="/login" className="btn btn-on-ink-outline">
                     Sign in
                   </Link>
                 </div>
-                <p className="mt-5 text-[10px] text-brand-200/50">
-                  Demo environment · Uploaded documents stay off-chain
-                </p>
               </div>
             </div>
           </div>

@@ -1,20 +1,11 @@
 import { VerdictOut } from "@/lib/api";
-import {
-  ChevronDown,
-  Flag,
-  ShieldAlert,
-  ShieldCheck,
-} from "@/components/icons";
+import { Flag, ShieldAlert, ShieldCheck } from "@/components/icons";
 
 type VerdictConfig = {
   label: string;
   sub: string;
   icon: typeof ShieldCheck;
-  header: string;
-  iconWrap: string;
-  title: string;
-  badge: string;
-  dot: string;
+  inverted: boolean;
 };
 
 const VERDICTS: Record<string, VerdictConfig> = {
@@ -22,31 +13,19 @@ const VERDICTS: Record<string, VerdictConfig> = {
     label: "Verified",
     sub: "No blocking inconsistencies were found in the uploaded documents.",
     icon: ShieldCheck,
-    header: "from-emerald-50 via-emerald-50/60 to-white",
-    iconWrap: "bg-emerald-600 text-white",
-    title: "text-emerald-950",
-    badge: "bg-emerald-600/10 text-emerald-800 ring-1 ring-inset ring-emerald-600/20",
-    dot: "bg-emerald-500",
+    inverted: false,
   },
   needs_review: {
     label: "Needs review",
     sub: "Some items could not be cleared automatically. A reviewer should confirm them.",
     icon: ShieldAlert,
-    header: "from-amber-50 via-amber-50/60 to-white",
-    iconWrap: "bg-amber-500 text-white",
-    title: "text-amber-950",
-    badge: "bg-amber-500/10 text-amber-800 ring-1 ring-inset ring-amber-600/20",
-    dot: "bg-amber-500",
+    inverted: true,
   },
   flagged: {
     label: "Flagged",
     sub: "A significant finding or an ownership gap needs attention before proceeding.",
     icon: Flag,
-    header: "from-rose-50 via-rose-50/60 to-white",
-    iconWrap: "bg-rose-500 text-white",
-    title: "text-rose-950",
-    badge: "bg-rose-500/10 text-rose-800 ring-1 ring-inset ring-rose-600/20",
-    dot: "bg-rose-500",
+    inverted: true,
   },
 };
 
@@ -54,11 +33,7 @@ const EMPTY: VerdictConfig = {
   label: "Not analysed",
   sub: "Run the analysis to compute a verdict from the uploaded documents.",
   icon: ShieldAlert,
-  header: "from-slate-50 to-white",
-  iconWrap: "bg-slate-100 text-slate-500",
-  title: "text-slate-700",
-  badge: "bg-slate-500/10 text-slate-600 ring-1 ring-inset ring-slate-500/15",
-  dot: "bg-slate-400",
+  inverted: false,
 };
 
 export default function VerdictBadge({ verdict }: { verdict: VerdictOut | null }) {
@@ -68,65 +43,95 @@ export default function VerdictBadge({ verdict }: { verdict: VerdictOut | null }
   const notChecked = verdict?.not_checked ?? [];
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-ink/[0.06] bg-white/80 shadow-soft backdrop-blur-sm">
-      <div className={`bg-gradient-to-br p-5 ${config.header}`}>
+    <section className="border border-ink">
+      <div
+        className={`p-5 ${
+          config.inverted ? "bg-ink text-paper" : "bg-paper text-ink"
+        }`}
+      >
         <div className="flex items-start justify-between gap-3">
-          <span className={`grid h-10 w-10 place-items-center rounded-xl ${config.iconWrap}`}>
+          <span className="grid h-10 w-10 place-items-center border border-current">
             <Icon className="h-5 w-5" />
           </span>
-          <span className={`${config.badge} inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em]`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${config.dot}`} />
+          <span
+            className={`border px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.1em] ${
+              config.inverted ? "border-quiet-inverted text-quiet" : "border-ink text-ink"
+            }`}
+          >
             Screening verdict
           </span>
         </div>
 
-        <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+        <p
+          className={`mt-5 font-mono text-[10px] uppercase tracking-[0.12em] ${
+            config.inverted ? "text-quiet" : "text-secondary"
+          }`}
+        >
           Due-diligence verdict
         </p>
-        <h2 className={`mt-1 text-[26px] font-medium leading-tight ${config.title}`}>{config.label}</h2>
-        <p className="mt-1.5 text-xs leading-relaxed text-slate-600">{config.sub}</p>
+        <h2
+          className={`mt-1 font-display text-[34px] font-medium leading-none tracking-[-0.03em] ${
+            config.inverted ? "text-paper" : "text-ink"
+          }`}
+        >
+          {config.label}
+        </h2>
+        <p
+          className={`mt-3 max-w-[34em] text-[14px] leading-relaxed ${
+            config.inverted ? "text-quiet" : "text-secondary"
+          }`}
+        >
+          {config.sub}
+        </p>
       </div>
 
-      <div className="space-y-4 p-5">
+      <div className="space-y-5 p-5">
         {reasons.length > 0 ? (
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-              Why
-            </p>
-            <ul className="mt-2 space-y-2">
+            <p className="eyebrow text-ink">Why</p>
+            <ul className="mt-3 space-y-2.5">
               {reasons.map((reason, index) => (
-                <li key={index} className="flex gap-2 text-xs leading-relaxed text-slate-600">
-                  <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${config.dot}`} />
+                <li
+                  key={index}
+                  className="flex gap-2.5 text-[13px] leading-relaxed text-secondary"
+                >
+                  <span className="mt-[0.6em] h-1.5 w-1.5 shrink-0 bg-ink" />
                   <span>{reason}</span>
                 </li>
               ))}
             </ul>
           </div>
         ) : verdict?.verdict ? (
-          <p className="text-xs leading-relaxed text-slate-500">
+          <p className="text-[13px] leading-relaxed text-secondary">
             No ownership, identity, area, encumbrance or document-integrity findings were raised.
           </p>
         ) : (
-          <p className="text-xs leading-relaxed text-slate-500">
+          <p className="text-[13px] leading-relaxed text-secondary">
             The verdict appears after the first analysis run.
           </p>
         )}
 
         {notChecked.length > 0 && (
-          <details className="group rounded-xl border border-ink/[0.06] bg-paper/60 px-3.5 py-3">
-            <summary className="flex cursor-pointer items-center justify-between gap-2 text-[11px] font-semibold text-slate-600">
-              <span className="inline-flex items-center gap-1.5">
+          <details className="group border-t border-quiet pt-4">
+            <summary className="flex cursor-pointer items-center justify-between gap-2 text-[12px] font-medium text-ink">
+              <span className="inline-flex items-center gap-2">
                 Not checked
-                <span className="rounded-full bg-white px-1.5 py-0.5 text-[10px] font-bold text-slate-500 ring-1 ring-inset ring-ink/10">
+                <span className="border border-quiet px-1.5 py-0.5 font-mono text-[10px] text-secondary">
                   {notChecked.length}
                 </span>
               </span>
-              <ChevronDown className="h-3.5 w-3.5 text-slate-400 transition group-open:rotate-180" />
+              <span aria-hidden className="text-lg leading-none">
+                <span className="group-open:hidden">+</span>
+                <span className="hidden group-open:inline">−</span>
+              </span>
             </summary>
-            <ul className="mt-2.5 space-y-1.5">
+            <ul className="mt-3 space-y-2">
               {notChecked.map((item, index) => (
-                <li key={index} className="flex gap-1.5 text-[11px] leading-relaxed text-slate-500">
-                  <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-slate-300" />
+                <li
+                  key={index}
+                  className="flex gap-2 text-[12px] leading-relaxed text-secondary"
+                >
+                  <span className="mt-[0.6em] h-1 w-1 shrink-0 bg-secondary" />
                   <span>{item}</span>
                 </li>
               ))}
@@ -134,13 +139,16 @@ export default function VerdictBadge({ verdict }: { verdict: VerdictOut | null }
           </details>
         )}
 
-        <div className="border-t border-ink/[0.06] pt-3">
+        <div className="border-t border-quiet pt-4">
           {verdict?.engine_version && (
-            <p className="break-all font-mono text-[9px] leading-relaxed text-slate-400" title="Engine tag for this run">
+            <p
+              className="break-all font-mono text-[10px] leading-relaxed text-secondary"
+              title="Engine tag for this run"
+            >
               {verdict.engine_version}
             </p>
           )}
-          <p className="mt-2 text-[10px] leading-relaxed text-slate-400">
+          <p className="mt-2 font-mono text-[10px] leading-relaxed text-secondary">
             Findings are indicators for a reviewer, not legal determinations.
           </p>
         </div>

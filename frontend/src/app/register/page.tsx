@@ -33,10 +33,12 @@ export default function RegisterPage() {
 
   return (
     <AuthShell>
-      <div className="animate-fade-up">
+      <div>
         <p className="eyebrow">Get started</p>
-        <h1 className="mt-2 text-[32px] font-medium leading-tight">Create your workspace.</h1>
-        <p className="mt-2 text-sm text-slate-500">
+        <h1 className="mt-3 font-display text-[44px] leading-[0.98] tracking-[-0.03em]">
+          Create your workspace.
+        </h1>
+        <p className="mt-3 text-[14px] leading-relaxed text-secondary">
           Set up a private portfolio for your property files.
         </p>
 
@@ -44,7 +46,7 @@ export default function RegisterPage() {
           {error && (
             <div
               role="alert"
-              className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-3 text-sm text-rose-700"
+              className="flex items-start gap-2.5 border border-ink px-3.5 py-3 text-[13px] leading-relaxed text-ink"
             >
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <p className="break-words">{error}</p>
@@ -56,7 +58,7 @@ export default function RegisterPage() {
               Full name
             </label>
             <div className="relative">
-              <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary" />
               <input
                 id="full-name"
                 className="input pl-10"
@@ -74,7 +76,7 @@ export default function RegisterPage() {
               Email address
             </label>
             <div className="relative">
-              <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary" />
               <input
                 id="email"
                 className="input pl-10"
@@ -93,7 +95,7 @@ export default function RegisterPage() {
               Password
             </label>
             <div className="relative">
-              <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary" />
               <input
                 id="password"
                 className="input px-10"
@@ -108,24 +110,26 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((value) => !value)}
-                className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-slate-400 transition hover:bg-ink/5 hover:text-ink"
+                className="absolute right-1 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center text-secondary hover:text-ink"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            <p className="mt-1.5 text-[11px] text-slate-400">Use at least 6 characters.</p>
+            <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.08em] text-secondary">
+              Use at least 6 characters.
+            </p>
           </div>
 
-          <button type="submit" className="btn-primary w-full py-3" disabled={loading}>
+          <button type="submit" className="btn btn-primary w-full" disabled={loading}>
             {loading ? <Spinner /> : null}
             {loading ? "Creating account…" : "Create account"}
           </button>
         </form>
 
-        <p className="mt-7 text-center text-sm text-slate-500">
+        <p className="mt-7 text-center text-[14px] text-secondary">
           Already have an account?{" "}
-          <Link href="/login" className="font-semibold text-brand-700 underline-offset-4 hover:underline">
+          <Link href="/login" className="border-b border-ink font-medium text-ink">
             Sign in
           </Link>
         </p>

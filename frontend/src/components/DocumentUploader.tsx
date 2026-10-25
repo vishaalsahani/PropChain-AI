@@ -62,15 +62,15 @@ export default function DocumentUploader({
   }
 
   return (
-    <section className="card">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+    <section>
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold">Upload documents</h2>
-          <p className="mt-0.5 text-xs text-slate-400">
+          <h3 className="font-display text-[26px] leading-none text-ink">Upload documents</h3>
+          <p className="mt-1.5 text-[12px] leading-relaxed text-secondary">
             Add the deed set for this property — one file at a time.
           </p>
         </div>
-        <span className="chip text-[10px] uppercase tracking-wide">PDF · JPG · PNG</span>
+        <span className="chip">PDF · JPG · PNG</span>
       </div>
 
       <input
@@ -105,30 +105,31 @@ export default function DocumentUploader({
           const file = e.dataTransfer.files?.[0];
           if (file) upload(file);
         }}
-        className={`cursor-pointer rounded-2xl border border-dashed p-5 transition ${
-          dragging
-            ? "border-brand-400 bg-brand-50/80 ring-4 ring-brand-500/10"
-            : "border-ink/15 bg-white/50 hover:border-brand-300 hover:bg-brand-50/30"
-        } ${loading ? "pointer-events-none opacity-70" : ""}`}
+        className={`cursor-pointer border border-dashed p-5 ${
+          dragging ? "border-ink bg-paper-deep" : "border-quiet bg-paper hover:border-ink"
+        } ${loading ? "pointer-events-none opacity-60" : ""}`}
       >
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-start gap-3.5">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-600/10">
+            <span className="grid h-11 w-11 shrink-0 place-items-center border border-ink text-ink">
               <UploadCloud className="h-5 w-5" />
             </span>
             <div>
-              <p className="text-sm font-semibold text-ink">
-                Drop a file here, or <span className="text-brand-700 underline underline-offset-4">browse</span>
+              <p className="font-display text-[20px] leading-tight text-ink">
+                Drop a file here, or{" "}
+                <span className="border-b border-ink">browse</span>
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-[12px] leading-relaxed text-secondary">
                 Sale deed, 7/12 extract, property card, EC or ferfar.
               </p>
-              <p className="mt-1 text-[11px] text-slate-400">Up to {MAX_MB} MB per file.</p>
+              <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.08em] text-secondary">
+                Up to {MAX_MB} MB per file
+              </p>
             </div>
           </div>
           <button
             type="button"
-            className="btn-secondary btn-sm shrink-0"
+            className="btn btn-secondary btn-sm shrink-0"
             onClick={(e) => {
               e.stopPropagation();
               openPicker();
@@ -141,20 +142,23 @@ export default function DocumentUploader({
       </div>
 
       {loading && (
-        <div className="mt-3 flex items-center gap-2.5 rounded-xl bg-brand-50/80 px-3.5 py-2.5 text-xs font-medium text-brand-800">
+        <div className="mt-3 flex items-center gap-2.5 border border-ink bg-ink px-3.5 py-2.5 font-mono text-[10px] uppercase tracking-[0.08em] text-paper">
           <Spinner className="h-3.5 w-3.5" />
-          Processing — OCR, classification and field extraction…
+          Processing — OCR, classification and field extraction
         </div>
       )}
 
       {error && (
-        <div className="mt-3 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs text-rose-700">
+        <div
+          role="alert"
+          className="mt-3 flex items-start gap-2.5 border border-ink px-3.5 py-2.5 text-[12px] leading-relaxed text-ink"
+        >
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <p>{error}</p>
         </div>
       )}
 
-      <p className="mt-3 flex items-center gap-1.5 text-[11px] text-slate-400">
+      <p className="mt-3 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-secondary">
         <Lock className="h-3 w-3" />
         Files stay off-chain — only their SHA-256 hash is registered.
       </p>
@@ -165,20 +169,36 @@ export default function DocumentUploader({
 export function DocumentList({
   documents,
   onAction,
+  canManage = true,
 }: {
   documents: DocumentItem[];
   onAction: () => void;
+  canManage?: boolean;
 }) {
   const [busy, setBusy] = useState<number | null>(null);
   const [copied, setCopied] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const [feedback, setFeedback] = useState<{ id: number; text: string; ok: boolean } | null>(null);
+
+  const hasEvmAnchor = documents.some(
+    (doc) => doc.blockchain_tx && !doc.blockchain_tx.startsWith("mock-tx-")
+  );
+  const hasMockAnchor = documents.some((doc) => doc.blockchain_tx?.startsWith("mock-tx-"));
 
   async function run(id: number, action: "register" | "verify") {
     setBusy(id);
     setError("");
+    setFeedback(null);
     try {
-      if (action === "register") await api.registerBlockchain(id);
-      else await api.verifyBlockchain(id);
+      const result =
+        action === "register"
+          ? await api.registerBlockchain(id)
+          : await api.verifyBlockchain(id);
+      setFeedback({
+        id,
+        text: result.message,
+        ok: result.status !== "MISMATCH" && result.status !== "NOT_REGISTERED",
+      });
       await onAction();
     } catch (err) {
       setError(err instanceof Error ? err.message : "The blockchain action failed.");
@@ -199,10 +219,10 @@ export function DocumentList({
 
   if (!documents.length) {
     return (
-      <div className="rounded-xl border border-dashed border-ink/15 bg-white/40 px-5 py-10 text-center">
-        <FileText className="mx-auto h-7 w-7 text-slate-300" />
-        <p className="mt-3 text-sm font-medium text-slate-600">No documents yet</p>
-        <p className="mt-1 text-xs text-slate-400">
+      <div className="border border-quiet px-5 py-12 text-center">
+        <FileText className="mx-auto h-7 w-7 text-secondary" />
+        <p className="mt-4 font-display text-[24px] leading-none text-ink">No documents yet</p>
+        <p className="mx-auto mt-2 max-w-sm text-[13px] leading-relaxed text-secondary">
           Upload the first file to start the extraction pipeline.
         </p>
       </div>
@@ -210,39 +230,58 @@ export function DocumentList({
   }
 
   return (
-    <div className="space-y-3">
+    <div>
       {error && (
-        <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs text-rose-700">
+        <div
+          role="alert"
+          className="mb-3 flex items-start gap-2.5 border border-ink px-3.5 py-2.5 text-[12px] leading-relaxed text-ink"
+        >
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <p>{error}</p>
         </div>
       )}
 
+      {feedback && (
+        <p
+          role="status"
+          className={`mb-3 flex items-center gap-2 border px-3.5 py-2.5 font-mono text-[10px] uppercase tracking-[0.06em] text-ink ${
+            feedback.ok ? "border-quiet" : "border-2 border-ink"
+          }`}
+        >
+          <ShieldCheck className="h-3.5 w-3.5" />
+          {feedback.text}
+        </p>
+      )}
+
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 border-t border-ink pt-3 font-mono text-[9px] uppercase tracking-[0.06em] text-secondary">
+        <span>Anchor mode</span>
+        <span className="text-ink">
+          {hasEvmAnchor ? "EVM · confirmed" : hasMockAnchor ? "Mock · not a chain write" : "Not anchored"}
+        </span>
+      </div>
+
       {documents.map((doc) => {
         const status = documentStatus(doc.status);
         return (
-          <div
-            key={doc.id}
-            className="rounded-xl border border-ink/[0.06] bg-white/70 p-4 transition hover:border-brand-200/80 hover:bg-white"
-          >
+          <div key={doc.id} className="border-t border-quiet py-4">
             <div className="flex flex-wrap items-start gap-3">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700">
+              <span className="grid h-10 w-10 shrink-0 place-items-center border border-quiet text-ink">
                 <FileText className="h-[18px] w-[18px]" />
               </span>
 
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
-                  <p className="max-w-full truncate text-sm font-semibold text-ink">{doc.filename}</p>
-                  <span className="badge bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-500/15">
-                    {humanize(doc.doc_type)}
-                  </span>
+                  <p className="max-w-full truncate font-display text-[20px] leading-tight text-ink">
+                    {doc.filename}
+                  </p>
+                  <span className="chip">{humanize(doc.doc_type)}</span>
                   <span className={status.badge}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
+                    <span className={`h-1.5 w-1.5 ${status.dot}`} />
                     {status.label}
                   </span>
                 </div>
 
-                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] text-slate-400">
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 font-mono text-[10px] text-secondary">
                   <span className="inline-flex min-w-0 items-center gap-1.5">
                     <Hash className="h-3 w-3 shrink-0" />
                     <span className="hash" title={doc.file_hash}>
@@ -251,12 +290,12 @@ export function DocumentList({
                     <button
                       type="button"
                       onClick={() => copyHash(doc)}
-                      className="rounded p-0.5 transition hover:bg-ink/5 hover:text-ink"
+                      className="p-0.5 hover:text-ink"
                       aria-label="Copy SHA-256 hash"
                       title="Copy full hash"
                     >
                       {copied === doc.id ? (
-                        <Check className="h-3 w-3 text-emerald-600" />
+                        <Check className="h-3 w-3" />
                       ) : (
                         <Copy className="h-3 w-3" />
                       )}
@@ -266,39 +305,53 @@ export function DocumentList({
                 </div>
 
                 {doc.blockchain_tx && (
-                  <p className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-emerald-700">
+                  <p className="mt-2 flex flex-wrap items-center gap-1.5 font-mono text-[10px] text-ink">
                     <Link2 className="h-3 w-3 shrink-0" />
-                    <span className="font-medium">Hash anchored</span>
-                    <span className="font-mono text-emerald-600/80">{shortHash(doc.blockchain_tx, 12, 6)}</span>
-                    {doc.blockchain_verified && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/15">
+                    <span className="uppercase tracking-[0.08em]">
+                      {doc.blockchain_tx.startsWith("mock-tx-") ? "Mock anchor" : "EVM anchor"}
+                    </span>
+                    <span className="text-secondary">{shortHash(doc.blockchain_tx, 12, 6)}</span>
+                    {doc.blockchain_verified === true && (
+                      <span className="inline-flex items-center gap-1 border border-ink px-1.5 py-0.5 uppercase tracking-[0.08em]">
                         <ShieldCheck className="h-2.5 w-2.5" />
                         Verified
+                      </span>
+                    )}
+                    {doc.blockchain_verified === false && (
+                      <span className="inline-flex items-center gap-1 border-2 border-ink px-1.5 py-0.5 uppercase tracking-[0.08em]">
+                        <AlertTriangle className="h-2.5 w-2.5" />
+                        Mismatch
                       </span>
                     )}
                   </p>
                 )}
               </div>
 
-              <div className="flex w-full shrink-0 flex-wrap gap-1.5 sm:w-auto">
-                <button
-                  className="btn-secondary btn-sm"
-                  onClick={() => run(doc.id, "register")}
-                  disabled={busy === doc.id}
-                  title="Register the SHA-256 hash on-chain"
-                >
-                  {busy === doc.id ? <Spinner className="h-3 w-3" /> : null}
-                  Register hash
-                </button>
-                <button
-                  className="btn-secondary btn-sm"
-                  onClick={() => run(doc.id, "verify")}
-                  disabled={busy === doc.id}
-                  title="Verify the stored hash against the on-chain record"
-                >
-                  Verify
-                </button>
-              </div>
+              {canManage && (
+                <div className="flex w-full shrink-0 flex-wrap gap-2 sm:w-auto">
+                  {!doc.blockchain_tx ? (
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => run(doc.id, "register")}
+                      disabled={busy === doc.id}
+                      title="Anchor the SHA-256 hash using the configured blockchain mode"
+                    >
+                      {busy === doc.id ? <Spinner className="h-3 w-3" /> : null}
+                      Anchor hash
+                    </button>
+                  ) : (
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => run(doc.id, "verify")}
+                      disabled={busy === doc.id}
+                      title="Compare the stored file with the anchored hash"
+                    >
+                      {busy === doc.id ? <Spinner className="h-3 w-3" /> : null}
+                      Verify hash
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         );

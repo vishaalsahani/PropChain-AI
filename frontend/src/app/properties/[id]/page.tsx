@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import DocumentUploader, { DocumentList } from "@/components/DocumentUploader";
 import FindingsList from "@/components/FindingsList";
 import OwnershipTimeline from "@/components/OwnershipTimeline";
+import ReviewPanel from "@/components/ReviewPanel";
 import RiskIndicator from "@/components/RiskIndicator";
 import VerdictBadge from "@/components/VerdictBadge";
 import {
@@ -23,10 +24,13 @@ import {
 } from "@/components/icons";
 import {
   api,
+  AnalysisRunSummary,
   DocumentItem,
   Finding,
+  FindingReviewStatus,
   OwnershipNode,
   Property,
+  UserOut,
   VerdictOut,
   getToken,
 } from "@/lib/api";
@@ -35,10 +39,10 @@ import { formatArea, formatDate, propertyStatus } from "@/lib/presentation";
 type Notice = { text: string; tone: "success" | "warning" | "danger" | "info" };
 
 const NOTICE_STYLES: Record<Notice["tone"], string> = {
-  success: "border-emerald-200 bg-emerald-50/80 text-emerald-800",
-  warning: "border-amber-200 bg-amber-50/80 text-amber-800",
-  danger: "border-rose-200 bg-rose-50/80 text-rose-800",
-  info: "border-brand-200 bg-brand-50/80 text-brand-900",
+  success: "border-ink",
+  warning: "border-ink",
+  danger: "border-ink",
+  info: "border-ink",
 };
 
 export default function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -49,6 +53,8 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   const [findings, setFindings] = useState<Finding[]>([]);
   const [ownership, setOwnership] = useState<OwnershipNode[]>([]);
   const [verdict, setVerdict] = useState<VerdictOut | null>(null);
+  const [runs, setRuns] = useState<AnalysisRunSummary[]>([]);
+  const [me, setMe] = useState<UserOut | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [error, setError] = useState("");
   const [running, setRunning] = useState(false);
@@ -56,16 +62,20 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   const [loading, setLoading] = useState(true);
 
   async function refresh() {
-    const [prop, docs, findingList, chain] = await Promise.all([
+    const [prop, docs, findingList, chain, runList, currentUser] = await Promise.all([
       api.getProperty(propertyId),
       api.listDocuments(propertyId),
       api.getFindings(propertyId),
       api.getOwnership(propertyId),
+      api.listRuns(propertyId).catch(() => []),
+      api.me().catch(() => null),
     ]);
     setProperty(prop);
     setDocuments(docs);
     setFindings(findingList);
     setOwnership(chain);
+    setRuns(runList);
+    setMe(currentUser);
     // 404 until the first analysis run exists; that is a normal state.
     setVerdict(await api.getVerdict(propertyId).catch(() => null));
   }
@@ -100,6 +110,22 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
     }
   }
 
+  async function reviewFinding(
+    findingId: number,
+    status: FindingReviewStatus,
+    note: string,
+    expectedStatus: FindingReviewStatus
+  ) {
+    const updated = await api.reviewFinding(findingId, {
+      status,
+      note: note || null,
+      expected_status: expectedStatus,
+    });
+    setFindings((current) =>
+      current.map((finding) => (finding.id === findingId ? updated : finding))
+    );
+  }
+
   async function downloadReport() {
     const token = getToken();
     if (!token) return;
@@ -127,24 +153,15 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
     return (
       <>
         <Navbar />
-        <main className="shell space-y-6 py-8">
+        <main className="shell py-10">
           <div className="skeleton h-3 w-40" />
-          <div className="space-y-3">
-            <div className="skeleton h-3 w-24" />
-            <div className="skeleton h-9 w-2/3 max-w-lg" />
-            <div className="skeleton h-3 w-1/3" />
+          <div className="skeleton mt-6 h-12 w-2/3 max-w-xl" />
+          <div className="skeleton mt-4 h-3 w-1/3" />
+          <div className="mt-12 grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
+            <div className="skeleton h-72 w-full" />
+            <div className="skeleton h-72 w-full" />
           </div>
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="space-y-6 lg:col-span-2">
-              <div className="skeleton h-44 w-full" />
-              <div className="skeleton h-64 w-full" />
-              <div className="skeleton h-52 w-full" />
-            </div>
-            <div className="space-y-6">
-              <div className="skeleton h-40 w-full" />
-              <div className="skeleton h-64 w-full" />
-            </div>
-          </div>
+          <div className="mt-6 skeleton h-56 w-full" />
         </main>
       </>
     );
@@ -155,11 +172,13 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
       <>
         <Navbar />
         <main className="shell py-16">
-          <div className="mx-auto max-w-md rounded-2xl border border-rose-200 bg-rose-50 p-8 text-center">
-            <AlertTriangle className="mx-auto h-8 w-8 text-rose-500" />
-            <h1 className="mt-4 text-xl font-medium">This file could not be opened</h1>
-            <p className="mt-2 text-sm text-rose-700">{error || "The property was not found."}</p>
-            <Link href="/dashboard" className="btn-secondary mt-6 bg-white/70">
+          <div className="mx-auto max-w-xl border border-ink p-8 text-center">
+            <AlertTriangle className="mx-auto h-8 w-8 text-ink" />
+            <h1 className="mt-4 font-display text-[32px] leading-none">This file could not be opened</h1>
+            <p className="mt-3 text-[13px] leading-relaxed text-secondary">
+              {error || "The property was not found."}
+            </p>
+            <Link href="/dashboard" className="btn btn-secondary mt-6">
               <ArrowLeft className="h-4 w-4" />
               Back to portfolio
             </Link>
@@ -173,171 +192,263 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   const location = [property.village, property.taluka, property.district, property.state]
     .filter((part, index, parts) => Boolean(part) && parts.indexOf(part) === index)
     .join(", ");
+  const canReview = me?.role === "reviewer" || me?.role === "admin";
+  const canEdit = me?.role === "buyer" || me?.role === "owner";
+  const latestRun = runs[0] ?? null;
 
   return (
     <>
       <Navbar />
-      <main className="shell space-y-7 py-8 sm:py-10">
-        <div className="animate-fade-up">
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 transition hover:text-brand-700"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Portfolio
-          </Link>
-
-          <div className="mt-5 flex flex-wrap items-start justify-between gap-5">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <span className={status.badge}>
-                  <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
-                  {status.label}
-                </span>
-                <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-400">
-                  <Calendar className="h-3.5 w-3.5" />
-                  Created {formatDate(property.created_at)}
-                </span>
-              </div>
-              <h1 className="mt-3 text-balance text-[30px] font-medium leading-tight sm:text-[36px]">
-                {property.title}
-              </h1>
-              <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-500">
-                <MapPin className="h-4 w-4 shrink-0 text-slate-400" />
-                {location || "Location not set"}
-              </p>
-              <div className="mt-4 flex flex-wrap gap-1.5">
-                <span className="chip">
-                  <Hash className="h-3.5 w-3.5 text-slate-400" />
-                  Survey {property.survey_number || "—"}
-                </span>
-                <span className="chip">
-                  <Hash className="h-3.5 w-3.5 text-slate-400" />
-                  Gat {property.gat_number || "—"}
-                </span>
-                <span className="chip">
-                  <Ruler className="h-3.5 w-3.5 text-slate-400" />
-                  {formatArea(property.area_sqft)}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <button className="btn-primary" onClick={runAnalysis} disabled={running} aria-busy={running}>
-                {running ? <Spinner /> : <Sparkles className="h-4 w-4" />}
-                {running ? "Running analysis…" : "Run analysis"}
-              </button>
-              <button className="btn-secondary" onClick={downloadReport} disabled={downloading}>
-                {downloading ? <Spinner /> : <Download className="h-4 w-4" />}
-                {downloading ? "Preparing…" : "Report"}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {notice && (
-          <div
-            role="status"
-            className={`animate-fade-in flex items-start gap-3 rounded-2xl border px-4 py-3.5 text-sm ${NOTICE_STYLES[notice.tone]}`}
-          >
-            {notice.tone === "success" ? (
-              <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
-            ) : (
-              <Info className="mt-0.5 h-4 w-4 shrink-0" />
-            )}
-            <p className="flex-1 leading-relaxed">{notice.text}</p>
-            <button
-              onClick={() => setNotice(null)}
-              className="rounded-lg p-1 transition hover:bg-black/5"
-              aria-label="Dismiss message"
+      <main>
+        <header className="border-b border-quiet">
+          <div className="shell py-10">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.08em] text-secondary hover:text-ink"
             >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        )}
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Portfolio
+            </Link>
 
-        {error && (
-          <div
-            role="alert"
-            className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3.5 text-sm text-rose-700"
-          >
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-            <p className="flex-1">{error}</p>
-            <button
-              onClick={() => setError("")}
-              className="rounded-lg p-1 transition hover:bg-black/5"
-              aria-label="Dismiss error"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        )}
-
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="animate-fade-up animation-delay-100 space-y-6 lg:col-span-2">
-            <DocumentUploader propertyId={propertyId} onUploaded={refresh} />
-
-            <section className="card">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <h2 className="text-base font-semibold">Documents</h2>
-                  <p className="mt-0.5 text-xs text-slate-400">
-                    {documents.length} {documents.length === 1 ? "file" : "files"} in the off-chain store
-                  </p>
+            <div className="mt-6 flex flex-wrap items-end justify-between gap-8">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className={status.badge}>
+                    <span className={`h-1.5 w-1.5 ${status.dot}`} />
+                    {status.label}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.07em] text-secondary">
+                    <Calendar className="h-3.5 w-3.5" />
+                    Created {formatDate(property.created_at)}
+                  </span>
+                  {canReview && (
+                    <span className="border border-ink px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.08em]">
+                      Reviewer view
+                    </span>
+                  )}
                 </div>
-                <span className="badge bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-500/15">
+                <h1 className="mt-4 max-w-[15em] font-display text-[clamp(40px,5.8cqw,78px)] font-medium leading-[0.98] tracking-[-0.035em]">
+                  {property.title}
+                </h1>
+                <p className="mt-3 flex items-center gap-2 text-[14px] text-secondary">
+                  <MapPin className="h-4 w-4 shrink-0" />
+                  {location || "Location not set"}
+                </p>
+                <div className="mt-5 flex flex-wrap gap-1.5">
+                  <span className="chip">
+                    <Hash className="h-3.5 w-3.5" />
+                    Survey {property.survey_number || "—"}
+                  </span>
+                  <span className="chip">
+                    <Hash className="h-3.5 w-3.5" />
+                    Gat {property.gat_number || "—"}
+                  </span>
+                  <span className="chip">
+                    <Ruler className="h-3.5 w-3.5" />
+                    {formatArea(property.area_sqft)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {canEdit && (
+                  <button
+                    className="btn btn-primary"
+                    onClick={runAnalysis}
+                    disabled={running}
+                    aria-busy={running}
+                  >
+                    {running ? <Spinner /> : <Sparkles className="h-4 w-4" />}
+                    {running ? "Running analysis…" : "Run analysis"}
+                  </button>
+                )}
+                <button
+                  className="btn btn-secondary"
+                  onClick={downloadReport}
+                  disabled={downloading}
+                >
+                  {downloading ? <Spinner /> : <Download className="h-4 w-4" />}
+                  {downloading ? "Preparing…" : "Report"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="shell">
+          {notice && (
+            <div
+              role="status"
+              className={`mt-6 flex items-start gap-3 border px-4 py-3.5 text-[13px] leading-relaxed text-ink ${NOTICE_STYLES[notice.tone]}`}
+            >
+              {notice.tone === "success" ? (
+                <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
+              ) : (
+                <Info className="mt-0.5 h-4 w-4 shrink-0" />
+              )}
+              <p className="flex-1">{notice.text}</p>
+              <button
+                onClick={() => setNotice(null)}
+                className="p-1 hover:text-secondary"
+                aria-label="Dismiss message"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
+          {error && (
+            <div
+              role="alert"
+              className="mt-6 flex items-start gap-3 border border-ink px-4 py-3.5 text-[13px] leading-relaxed text-ink"
+            >
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <p className="flex-1">{error}</p>
+              <button
+                onClick={() => setError("")}
+                className="p-1 hover:text-secondary"
+                aria-label="Dismiss error"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
+          <section className="border-b border-quiet">
+            <div className="dp-section py-10">
+              <div className="dp-rail">
+                <h2 className="display-heading">Screening summary</h2>
+                <p className="mt-4 max-w-[18rem] text-[13px] leading-relaxed text-secondary">
+                  The verdict is a screening output under the selected rule pack. Unknowns stay
+                  visible.
+                </p>
+              </div>
+              <div className="dp-body">
+                <div className="grid items-start gap-5 lg:grid-cols-[1.25fr_0.75fr]">
+                  <VerdictBadge verdict={verdict} />
+                  <RiskIndicator score={property.risk_score} />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {(canReview || runs.length > 0) && (
+            <section className="border-b border-quiet">
+              <div className="dp-section py-10">
+                <div className="dp-rail">
+                  <h2 className="display-heading">Human review</h2>
+                  <p className="mt-4 max-w-[18rem] text-[13px] leading-relaxed text-secondary">
+                    A reviewer can confirm the system result or record an override. The original run
+                    stays intact.
+                  </p>
+                  {latestRun && (
+                    <span className="mt-5 inline-block border border-quiet px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.08em] text-secondary">
+                      {latestRun.review_status === "pending"
+                        ? "Awaiting reviewer"
+                        : `Reviewed · ${latestRun.review_status}`}
+                    </span>
+                  )}
+                </div>
+                <div className="dp-body">
+                  <ReviewPanel
+                    latestRun={latestRun}
+                    runs={runs}
+                    canReview={canReview}
+                    onUpdated={refresh}
+                  />
+                </div>
+              </div>
+            </section>
+          )}
+
+          <section className="border-b border-quiet">
+            <div className="dp-section py-10">
+              <div className="dp-rail">
+                <h2 className="display-heading">Documents</h2>
+                <p className="mt-4 max-w-[18rem] text-[13px] leading-relaxed text-secondary">
+                  Every file stays in the off-chain store. Only its SHA-256 fingerprint is
+                  registered.
+                </p>
+                <span className="mt-5 inline-block border border-quiet px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.08em] text-secondary">
+                  {documents.length} {documents.length === 1 ? "file" : "files"} ·{" "}
                   {documents.filter((doc) => doc.status === "completed").length} processed
                 </span>
               </div>
-              <DocumentList documents={documents} onAction={refresh} />
-            </section>
-
-            <section className="card">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <h2 className="text-base font-semibold">Findings</h2>
-                  <p className="mt-0.5 text-xs text-slate-400">
-                    Inconsistencies raised by the matrix and the Maharashtra rule pack
-                  </p>
+              <div className="dp-body">
+                {canEdit && <DocumentUploader propertyId={propertyId} onUploaded={refresh} />}
+                <div className={canEdit ? "mt-8" : ""}>
+                  <div className="flex flex-wrap items-end justify-between gap-3 border-b border-ink pb-3">
+                    <h3 className="font-display text-[26px] leading-none">Files</h3>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-secondary">
+                      Hash-anchored records
+                    </span>
+                  </div>
+                  <DocumentList
+                    documents={documents}
+                    onAction={refresh}
+                    canManage={canEdit}
+                  />
                 </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="border-b border-quiet">
+            <div className="dp-section py-10">
+              <div className="dp-rail">
+                <h2 className="display-heading">Findings</h2>
+                <p className="mt-4 max-w-[18rem] text-[13px] leading-relaxed text-secondary">
+                  Inconsistencies raised by the matrix and the Maharashtra rule pack.
+                </p>
                 {findings.length > 0 && (
-                  <span className="badge bg-brand-50 text-brand-800 ring-1 ring-inset ring-brand-600/15">
+                  <span className="mt-5 inline-block border border-ink bg-ink px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.08em] text-paper">
                     {findings.length} {findings.length === 1 ? "finding" : "findings"}
                   </span>
                 )}
               </div>
-              <FindingsList findings={findings} hasRun={Boolean(verdict)} />
-            </section>
-          </div>
+              <div className="dp-body">
+                <FindingsList
+                  findings={findings}
+                  hasRun={Boolean(verdict)}
+                  canReview={canReview}
+                  onReview={reviewFinding}
+                />
+              </div>
+            </div>
+          </section>
 
-          <aside className="animate-fade-up animation-delay-200 space-y-6">
-            <VerdictBadge verdict={verdict} />
-            <RiskIndicator score={property.risk_score} />
-
-            <section className="card">
-              <div className="mb-4 flex items-center justify-between gap-2">
-                <h2 className="text-base font-semibold">Ownership chain</h2>
+          <section className="border-b border-quiet">
+            <div className="dp-section py-10">
+              <div className="dp-rail">
+                <h2 className="display-heading">Ownership chain</h2>
+                <p className="mt-4 max-w-[18rem] text-[13px] leading-relaxed text-secondary">
+                  The sequence of transfers, traced from the root record.
+                </p>
                 {ownership.length > 0 && (
-                  <span className="badge bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-500/15">
+                  <span className="mt-5 inline-block border border-quiet px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.08em] text-secondary">
                     {ownership.length} {ownership.length === 1 ? "step" : "steps"}
                   </span>
                 )}
               </div>
-              <OwnershipTimeline nodes={ownership} />
-            </section>
-          </aside>
+              <div className="dp-body">
+                <OwnershipTimeline nodes={ownership} />
+              </div>
+            </div>
+          </section>
         </div>
 
-        <div className="animate-fade-in flex items-start gap-3 rounded-2xl border border-ink/[0.06] bg-white/50 px-5 py-4">
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-700">
-            <Info className="h-4 w-4" />
-          </span>
-          <p className="text-[11px] leading-relaxed text-slate-500">
-            <span className="font-semibold text-slate-600">Disclaimer:</span> PropChain-AI provides
-            AI-assisted documentary analysis and risk indicators only. It does not establish legal
-            title or replace government records and professional legal advice.
-          </p>
-        </div>
+        <footer className="border-t-[3px] border-ink">
+          <div className="shell flex items-start gap-3 py-6">
+            <span className="grid h-8 w-8 shrink-0 place-items-center border border-ink text-ink">
+              <Info className="h-4 w-4" />
+            </span>
+            <p className="text-[11px] leading-relaxed text-secondary">
+              <span className="font-medium text-ink">Disclaimer:</span> PropChain-AI provides
+              AI-assisted documentary analysis and risk indicators only. It does not establish legal
+              title or replace government records and professional legal advice.
+            </p>
+          </div>
+        </footer>
       </main>
     </>
   );

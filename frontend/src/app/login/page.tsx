@@ -31,10 +31,12 @@ export default function LoginPage() {
 
   return (
     <AuthShell>
-      <div className="animate-fade-up">
+      <div>
         <p className="eyebrow">Sign in</p>
-        <h1 className="mt-2 text-[32px] font-medium leading-tight">Welcome back.</h1>
-        <p className="mt-2 text-sm text-slate-500">
+        <h1 className="mt-3 font-display text-[44px] leading-[0.98] tracking-[-0.03em]">
+          Welcome back.
+        </h1>
+        <p className="mt-3 text-[14px] leading-relaxed text-secondary">
           Continue to your due-diligence workspace.
         </p>
 
@@ -42,7 +44,7 @@ export default function LoginPage() {
           {error && (
             <div
               role="alert"
-              className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-3 text-sm text-rose-700"
+              className="flex items-start gap-2.5 border border-ink px-3.5 py-3 text-[13px] leading-relaxed text-ink"
             >
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <p>{error}</p>
@@ -54,7 +56,7 @@ export default function LoginPage() {
               Email address
             </label>
             <div className="relative">
-              <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary" />
               <input
                 id="email"
                 className="input pl-10"
@@ -73,7 +75,7 @@ export default function LoginPage() {
               Password
             </label>
             <div className="relative">
-              <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary" />
               <input
                 id="password"
                 className="input px-10"
@@ -87,7 +89,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((value) => !value)}
-                className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-slate-400 transition hover:bg-ink/5 hover:text-ink"
+                className="absolute right-1 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center text-secondary hover:text-ink"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -95,26 +97,26 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <button type="submit" className="btn-primary w-full py-3" disabled={loading}>
+          <button type="submit" className="btn btn-primary w-full" disabled={loading}>
             {loading ? <Spinner /> : null}
             {loading ? "Signing in…" : "Sign in"}
           </button>
         </form>
 
-        <div className="mt-6 rounded-xl border border-dashed border-brass-300/70 bg-brass-50/70 p-3.5">
+        <div className="mt-6 border border-ink p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-brass-700">
+              <p className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-ink">
                 <KeyRound className="h-3.5 w-3.5" />
                 Demo account
               </p>
-              <p className="mt-1.5 font-mono text-[11px] text-brass-900/80">
+              <p className="mt-2 font-mono text-[11px] text-secondary">
                 demo@propchainai.com · demo1234
               </p>
             </div>
             <button
               type="button"
-              className="btn-secondary btn-sm bg-white/70"
+              className="btn btn-secondary btn-sm"
               onClick={() => {
                 setEmail("demo@propchainai.com");
                 setPassword("demo1234");
@@ -126,9 +128,9 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <p className="mt-7 text-center text-sm text-slate-500">
+        <p className="mt-7 text-center text-[14px] text-secondary">
           New here?{" "}
-          <Link href="/register" className="font-semibold text-brand-700 underline-offset-4 hover:underline">
+          <Link href="/register" className="border-b border-ink font-medium text-ink">
             Create an account
           </Link>
         </p>
